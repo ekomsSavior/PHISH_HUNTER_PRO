@@ -2,6 +2,8 @@
 
 Advanced phishing investigation and disruption toolkit written in Python.
 
+![IMG_4518](https://github.com/user-attachments/assets/7a5d70cd-b3cc-4bc3-94e7-f80d9fa8eeec)
+
 PHISH_HUNTER_PRO is a modular Python-based anti-phishing reconnaissance and disruption toolkit.  
 
 Created by ekomsSavior, it is designed for security researchers, cyber defenders, and OSINT specialists to investigate and take action against phishing infrastructure.
