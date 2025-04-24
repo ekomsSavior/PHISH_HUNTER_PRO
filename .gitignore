@@ -1,0 +1,19 @@
+# Ignore report output (but keep the folder structure)
+reports/*
+!reports/.gitkeep
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore local settings or secrets
+.env
+.venv/
+*.log
+*.bak
+*.tmp
+
+# Ignore system files
+.DS_Store
+Thumbs.db
