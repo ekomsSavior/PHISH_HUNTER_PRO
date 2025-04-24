@@ -70,7 +70,8 @@ All output is saved to the `reports/` folder.
 
 ## ADDITIONAL TIPS FOR USERS
 
-- Run `curl -s https://target.com/path -o snapshot.html` to save a live view of the phishing page  
+-  Deep Recon automatically saves a raw HTML snapshot of the scanned phishing page in the reports/ folder.
+Open this file to review the full page content, identify hidden inputs, embedded links, or JavaScript tricks used by scammers.
 - Run `curl -v https://target.com/path` to see request/response data and understand how the page behaves  
 - Take the IP of a phishing domain and search it directly on [https://shodan.io](https://shodan.io) for deeper recon  
 - Use `ffuf`, `gobuster`, or `dirb` with alternate wordlists for extended brute-forcing  
