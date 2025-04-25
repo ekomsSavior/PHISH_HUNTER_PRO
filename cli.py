@@ -30,7 +30,7 @@ def main():
             run_scan(domain)
         elif choice == '2':
             url = input("Enter phishing URL: ")
-            run_spam(url)
+            run_spam(url, proxy_file=None, delay_enabled=False, use_tor=True)
         elif choice == "3":
             target = input("Enter domain or URL: ").strip()
             run_deep_recon(target)
