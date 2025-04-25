@@ -1,8 +1,7 @@
 from scanner import run_scan
 from spammer import run_spam
 from deep_recon import run_deep_recon
-import stem
-import stem.control
+import subprocess
 
 def banner():
     print("""
@@ -17,12 +16,10 @@ def banner():
 
 def renew_tor_circuit():
     try:
-        with stem.control.Controller.from_port(port=9051) as controller:
-            controller.authenticate()  # Or use password="yourpassword" if needed
-            controller.signal(stem.Signal.NEWNYM)
-            print("[✔] Requested new Tor circuit.")
-    except Exception as e:
-        print(f"[!] Failed to renew Tor circuit: {e}")
+        subprocess.run(["pkill", "-HUP", "tor"], check=True)
+        print("[✔] Tor circuit refreshed using pkill -HUP tor (Bash-style)")
+    except subprocess.CalledProcessError as e:
+        print(f"[!] Failed to rotate Tor circuit: {e}")
 
 def try_smart_spam(url):
     try:
