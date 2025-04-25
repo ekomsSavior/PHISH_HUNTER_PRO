@@ -25,6 +25,7 @@ Install required tools and libraries
 
 ```bash
 sudo apt update && sudo apt install tor dirb nmap curl python3-requests -y
+sudo apt install python3-socks -y
 ```
 
 ---
