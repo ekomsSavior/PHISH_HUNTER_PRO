@@ -6,7 +6,7 @@ Advanced phishing investigation and disruption toolkit written in Python.
 
 PHISH_HUNTER_PRO is a modular Python-based anti-phishing reconnaissance and disruption toolkit.  
 
-Created by ekomsSavior, it is designed for security researchers, cyber defenders, and OSINT specialists to investigate and take action against phishing infrastructure.
+Created by me ekomsSavior, it is designed for security researchers, cyber defenders, and OSINT specialists to investigate and take action against phishing infrastructure.
 
 It performs deep web page analysis, login page spam, open port scanning, SSL certificate inspection, metadata extraction, Shodan lookups, VirusTotal enrichment, and more.
 
@@ -16,41 +16,46 @@ It performs deep web page analysis, login page spam, open port scanning, SSL cer
 
 Clone the repository
 
-    git clone https://github.com/ekomsSavior/PHISH_HUNTER_PRO.git
-    cd PHISH_HUNTER_PRO
 
-Install the necessary system dependencies
+git clone https://github.com/ekomsSavior/PHISH_HUNTER_PRO.git
+cd PHISH_HUNTER_PRO
 
-    sudo apt update && sudo apt install tor dirb nmap curl python3-pip python3-requests -y
+Install required tools and libraries
+
+sudo apt update && sudo apt install tor dirb nmap curl python3-requests -y
 
 ---
 
 ## RUNNING THE TOOL
 
-Start Tor manually before launching the spammer (do this **every time** before using PHISH_HUNTER_PRO)
+Start Tor before using the spammer
 
-    sudo service tor start
+
+sudo systemctl start tor@default
 
 Then launch the tool
 
-    python3 cli.py
 
-You'll be presented with a menu
+python3 cli.py
 
-    [1] Scan Domain           – WHOIS, DNS headers, basic fingerprinting  
-    [2] Spam Login Page       – Sends fake logins through Tor + proxy  
-    [3] Deep Recon            – Full phishing investigation pipeline
+You’ll see
+
+[1] Scan Domain           – WHOIS, DNS headers, basic fingerprinting  
+[2] Spam Login Page       – Sends fake logins through Tor + proxy  
+[3] Deep Recon            – Full phishing investigation pipeline
 
 ---
 
 ## API KEY SETUP
 
-This tool supports **Shodan** and **VirusTotal**.
+The Deep Recon module supports Shodan and VirusTotal lookups.
 
-Edit the top of `deep_recon.py` to insert your API keys
+Edit the top of `deep_recon.py` to insert your keys
 
-    SHODAN_API_KEY = "your_key_here"
-    VT_API_KEY = "your_key_here"
+```python
+SHODAN_API_KEY = "your_key_here"
+VT_API_KEY = "your_key_here"
+```
 
 ---
 
@@ -59,67 +64,92 @@ Edit the top of `deep_recon.py` to insert your API keys
 - Follows and logs HTTP redirects  
 - Analyzes SSL certificates via OpenSSL  
 - Extracts metadata: inputs, iframes, scripts, emails, meta tags  
-- Saves a snapshot and raw HTML of the target  
+- Saves raw HTML snapshot and screenshot to the `reports/` folder  
 - Performs form discovery with curl and grep  
-- Runs a full `nmap` scan (top 1000 ports with version detection)  
+- Runs `nmap` scan with version detection  
 - Queries Shodan for IP intelligence  
-- Looks up VirusTotal results on the domain  
-- Finishes with a `dirb` brute-force directory scan (**600s timeout – this can take up to 10 minutes**)
-
-All output is saved to the `reports/` folder.
-
----
-
-## ADDITIONAL TIPS FOR USERS
-
--  Deep Recon automatically saves a raw HTML snapshot of the scanned phishing page in the reports/ folder.
-Open this file to review the full page content, identify hidden inputs, embedded links, or JavaScript tricks used by scammers.
-- Run `curl -v https://target.com/path` to see request/response data and understand how the page behaves  
-- Take the IP of a phishing domain and search it directly on [https://shodan.io](https://shodan.io) for deeper recon  
-- Use `ffuf`, `gobuster`, or `dirb` with alternate wordlists for extended brute-forcing  
-- Open the HTML snapshot saved by Deep Recon to explore forms, links, or other signs of malicious activity
+- Checks VirusTotal for malicious reports  
+- Ends with `dirb` directory brute-force scan (may take several minutes)
 
 ---
 
 ## SPAMMER MODULE
 
-Use the built-in spammer to disrupt phishing login forms with fake credentials.  
-It supports Tor, randomized user-agents, and proxy rotation.
+Use the spammer to disrupt phishing login forms with fake randomized logins.
 
-**Reminder:** You must manually start Tor (`sudo service tor start`) before running the spammer.
+Features:
+- Tor SOCKS5 support  
+- Circuit rotation using `pkill -HUP tor` (no config needed)  
+- User-agent randomization  
+- Optional proxy rotation  
 
-For slower, script-based spam (ideal for scam pages with minimal protection), refer to the original Bash version of Phish Hunter.
+**To use:**
+
+Start Tor with
+
+
+sudo systemctl start tor@default
+
+Then select option `[2]` from the CLI and enter a phishing URL.
+
+---
+
+## USING A PROXY LIST
+
+To rotate proxies if Tor fails:
+
+1. Create a file called `proxy_list.txt` in the project directory.
+2. Add one proxy per line, like this
+
+```
+http://123.45.67.89:8080
+socks5://98.76.54.32:1080
+```
+
+The tool will automatically use these if Tor is blocked or unavailable.
+
+---
+
+## ADDITIONAL TIPS
+
+- The Deep Recon module saves raw HTML pages — inspect them in your browser to discover hidden fields, script injections, and backdoors.  
+- Use tools like `ffuf`, `dirb`, or `gobuster` with custom wordlists for advanced enumeration.  
+- Use `curl -v` to explore redirect chains or form behavior.  
+- Query phishing site IPs directly on [https://shodan.io](https://shodan.io) for infrastructure recon.
 
 ---
 
 ## STAY TUNED
 
-This is an evolving project. Future updates will include deeper automation, smarter evasion, visual dashboards, and expanded modules. 
+This is an evolving project. Future updates will include
 
-Bookmark this repo or follow me to stay up to date.
+- Real-time dashboards  
+- Advanced evasions  
+- Better visualizations  
+- More automation modules  
 
-Want to support the ethical hacker community?  
-Submit a pull request or connect with me.
+Watch this repo or follow me on IG for updates.
 
 GitHub: https://github.com/ekomsSavior  
 Instagram: https://instagram.com/ekoms.is.my.savior  
-
-Together we are stronger. Let’s make scammers afraid again — and protect the innocent they target.
 
 ---
 
 ## DISCLAIMER
 
-Phish Hunter PRO is for **legal and ethical use only**.  
+**PHISH_HUNTER_PRO is for ethical use only.**  
 
-Use this tool only on domains you have permission to investigate.
+do not test on networks you dont have permission to test on.
 
-By using this software, you accept full responsibility for its use and release the author from all liability related to misuse.
+Use responsibly. You accept full liability for how you use this software.
 
 ---
 
 ## AUTHOR
 
-Created with intent, precision, and purpose by
+Crafted with soul and purpose by
 
-**ek0ms savi0r** – https://github.com/ekomsSavior
+**ek0ms savi0r**  
+https://github.com/ekomsSavior
+
+Let’s make scammers afraid again
