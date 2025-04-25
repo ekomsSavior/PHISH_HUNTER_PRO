@@ -129,3 +129,57 @@ def run_deep_recon(target_url):
         log(f"[!] Curl grep failed: {e}")
 
     log("\n📥 Raw HTML Copy (curl -o):")
+    try:
+        raw_path = f"reports/raw_{base_domain}_{timestamp}.html"
+        subprocess.run(["curl", "-s", target_url, "-o", raw_path], timeout=15)
+        log(f"Saved raw HTML to {raw_path}")
+    except Exception as e:
+        log(f"[!] Raw HTML save failed: {e}")
+
+    log("\n📡 Nmap Scan (Top 1000 ports):")
+    try:
+        ip = socket.gethostbyname(base_domain)
+        log(f"[DEBUG] Resolved IP: {ip}")
+        nmap_result = subprocess.check_output(
+            ["nmap", "-sV", "--top-ports", "1000", ip],
+            timeout=240
+        ).decode()
+        for line in nmap_result.strip().split("\n"):
+            log(line)
+    except Exception as e:
+        log(f"[!] Nmap scan failed: {e}")
+
+    log("\n🛰 Shodan Recon:")
+    if SHODAN_ENABLED:
+        try:
+            ip = socket.gethostbyname(base_domain)
+            api = Shodan(SHODAN_API_KEY)
+            data = api.host(ip)
+            log(f"IP: {data.get('ip_str', 'N/A')}")
+            log(f"Org: {data.get('org', 'N/A')}")
+            log(f"ISP: {data.get('isp', 'N/A')}")
+            log(f"Hostnames: {', '.join(data.get('hostnames', []))}")
+            log(f"Ports: {', '.join(map(str, data.get('ports', [])))}")
+        except Exception as e:
+            if "403" in str(e):
+                log("[!] Shodan API returned 403 – check free tier limits or upgrade")
+            else:
+                log(f"[!] Shodan lookup failed: {e}")
+    else:
+        log("[!] Shodan module not installed. Skipping Shodan scan.")
+        log("    → To enable it, install with: sudo apt install python3-pip && pip3 install shodan (optional)")
+
+    log("\n📂 DIRB Scan (/usr/share/dirb/wordlists/common.txt):")
+    try:
+        dirb_result = subprocess.check_output(
+            ["dirb", target_url, "/usr/share/dirb/wordlists/common.txt", "-f"],
+            stderr=subprocess.DEVNULL,
+            timeout=600
+        ).decode()
+        for line in dirb_result.splitlines():
+            if "==>" in line or "CODE:" in line:
+                log(line)
+    except Exception as e:
+        log(f"[!] DIRB scan failed: {e}")
+
+    log("\n🕷 Deep Recon Complete.\n")
