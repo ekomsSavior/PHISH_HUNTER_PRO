@@ -18,6 +18,7 @@ Clone the repository
 
 
 git clone https://github.com/ekomsSavior/PHISH_HUNTER_PRO.git
+
 cd PHISH_HUNTER_PRO
 
 Install required tools and libraries
