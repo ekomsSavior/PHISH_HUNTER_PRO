@@ -16,14 +16,16 @@ It performs deep web page analysis, login page spam, open port scanning, SSL cer
 
 Clone the repository
 
-
+```bash
 git clone https://github.com/ekomsSavior/PHISH_HUNTER_PRO.git
-
 cd PHISH_HUNTER_PRO
+```
 
 Install required tools and libraries
 
+```bash
 sudo apt update && sudo apt install tor dirb nmap curl python3-requests -y
+```
 
 ---
 
@@ -31,19 +33,23 @@ sudo apt update && sudo apt install tor dirb nmap curl python3-requests -y
 
 Start Tor before using the spammer
 
-
+```bash
 sudo systemctl start tor@default
+```
 
 Then launch the tool
 
-
+```bash
 python3 cli.py
+```
 
 You’ll see
 
+```
 [1] Scan Domain           – WHOIS, DNS headers, basic fingerprinting  
 [2] Spam Login Page       – Sends fake logins through Tor + proxy  
 [3] Deep Recon            – Full phishing investigation pipeline
+```
 
 ---
 
@@ -78,7 +84,7 @@ VT_API_KEY = "your_key_here"
 
 Use the spammer to disrupt phishing login forms with fake randomized logins.
 
-Features:
+Features
 - Tor SOCKS5 support  
 - Circuit rotation using `pkill -HUP tor` (no config needed)  
 - User-agent randomization  
@@ -88,8 +94,9 @@ Features:
 
 Start Tor with
 
-
+```bash
 sudo systemctl start tor@default
+```
 
 Then select option `[2]` from the CLI and enter a phishing URL.
 
@@ -97,7 +104,7 @@ Then select option `[2]` from the CLI and enter a phishing URL.
 
 ## USING A PROXY LIST
 
-To rotate proxies if Tor fails:
+To rotate proxies if Tor fails
 
 1. Create a file called `proxy_list.txt` in the project directory.
 2. Add one proxy per line, like this
@@ -122,7 +129,7 @@ The tool will automatically use these if Tor is blocked or unavailable.
 
 ## STAY TUNED
 
-This is an evolving project. Future updates will include
+This is an evolving project. Future updates will include:
 
 - Real-time dashboards  
 - Advanced evasions  
@@ -132,6 +139,7 @@ This is an evolving project. Future updates will include
 Watch this repo or follow me on IG for updates.
 
 GitHub: https://github.com/ekomsSavior  
+
 Instagram: https://instagram.com/ekoms.is.my.savior  
 
 ---
@@ -140,7 +148,7 @@ Instagram: https://instagram.com/ekoms.is.my.savior
 
 **PHISH_HUNTER_PRO is for ethical use only.**  
 
-do not test on networks you dont have permission to test on.
+You must have permission to test on networks.
 
 Use responsibly. You accept full liability for how you use this software.
 
@@ -152,5 +160,3 @@ Crafted with soul and purpose by
 
 **ek0ms savi0r**  
 https://github.com/ekomsSavior
-
-Let’s make scammers afraid again
