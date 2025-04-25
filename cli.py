@@ -16,11 +16,11 @@ def banner():
 
 def renew_tor_circuit():
     try:
-        subprocess.run(["pkill", "-HUP", "tor"], check=True)
-        print("[✔] Tor circuit refreshed using pkill -HUP tor (Bash-style)")
+        subprocess.run(["sudo", "pkill", "-HUP", "tor"], check=True)
+        print("[✔] Tor circuit refreshed with sudo pkill -HUP tor")
     except subprocess.CalledProcessError as e:
         print(f"[!] Failed to rotate Tor circuit: {e}")
-
+        
 def try_smart_spam(url):
     try:
         renew_tor_circuit()
