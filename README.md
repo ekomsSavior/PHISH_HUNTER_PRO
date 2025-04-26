@@ -54,19 +54,6 @@ You’ll see
 
 ---
 
-## API KEY SETUP
-
-The Deep Recon module supports Shodan and VirusTotal lookups.
-
-Edit the top of `deep_recon.py` to insert your keys
-
-```python
-SHODAN_API_KEY = "your_key_here"
-VT_API_KEY = "your_key_here"
-```
-
----
-
 ## SCANNER MODULE 
 
   - Pull WHOIS and DNS records
@@ -117,6 +104,19 @@ The tool will automatically use these if Tor is blocked or unavailable.
 - Queries Shodan for IP intelligence  
 - Checks VirusTotal for malicious reports  
 - Ends with `dirb` directory brute-force scan (may take several minutes)
+---
+
+## API KEY SETUP
+
+The Deep Recon module supports Shodan and VirusTotal lookups.
+
+Edit the top of `deep_recon.py` to insert your keys
+
+```python
+SHODAN_API_KEY = "your_key_here"
+VT_API_KEY = "your_key_here"
+```
+
 
 ---
 
