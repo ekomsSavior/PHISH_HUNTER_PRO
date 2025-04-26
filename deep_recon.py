@@ -5,6 +5,7 @@ import socket
 import subprocess
 import os
 import time
+import base64
 from urllib.parse import urlparse, urljoin
 
 # Try to import Shodan, but don’t crash if it’s missing
@@ -41,6 +42,17 @@ def get_ssl_info(domain):
     except Exception as e:
         return f"[!] SSL Error: {e}"
 
+def decode_base64_target(text):
+    matches = re.findall(r"target=([A-Za-z0-9+/=]+)", text)
+    decoded_targets = []
+    for encoded in matches:
+        try:
+            decoded = base64.b64decode(encoded).decode('utf-8')
+            decoded_targets.append(decoded)
+        except Exception:
+            continue
+    return decoded_targets
+
 def run_deep_recon(target_url):
     if not target_url.startswith("http"):
         target_url = "https://" + target_url
@@ -70,6 +82,7 @@ def run_deep_recon(target_url):
     meta_redirects = []
     visited = set()
     current_url = target_url
+    final_html = ""
 
     log("\nFollowing Meta-Refresh Redirects:")
 
@@ -80,6 +93,7 @@ def run_deep_recon(target_url):
         try:
             response = requests.get(current_url, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
             html = response.text
+            final_html = html
 
             parsed_current = urlparse(current_url)
             safe_filename = parsed_current.netloc.replace(".", "_") + parsed_current.path.replace("/", "_")
@@ -89,6 +103,10 @@ def run_deep_recon(target_url):
                 with open(page_path, "w", encoding="utf-8") as f:
                     f.write(html)
                 log(f"Saved page snapshot: {page_path}")
+
+            decoded_targets_url = decode_base64_target(current_url)
+            for decoded in decoded_targets_url:
+                log(f"  Decoded target from URL: {decoded}")
 
         except Exception as e:
             log(f"[!] Failed to fetch {current_url}: {e}")
@@ -118,6 +136,14 @@ def run_deep_recon(target_url):
     else:
         log("\nNo meta-refresh redirects followed.")
 
+    # After all redirects - check final HTML for base64
+    if final_html:
+        decoded_targets_final_html = decode_base64_target(final_html)
+        if decoded_targets_final_html:
+            log("\nDecoded hidden base64 targets from final page HTML:")
+            for decoded in decoded_targets_final_html:
+                log(f"  {decoded}")
+
     parsed = urlparse(target_url)
     domain_for_ssl = parsed.netloc or parsed.path
 
@@ -137,23 +163,23 @@ def run_deep_recon(target_url):
         log(f"[!] OpenSSL cert dump failed: {e}")
 
     log("\nInput Fields:")
-    for i in extract_inputs(html) or ["- None"]:
+    for i in extract_inputs(final_html) or ["- None"]:
         log(f"- {i}")
 
     log("\nIframes Found:")
-    for iframe in extract_iframes(html) or ["- None"]:
+    for iframe in extract_iframes(final_html) or ["- None"]:
         log(f"- {iframe}")
 
     log("\nEmails Found:")
-    for email in extract_emails(html) or ["- None"]:
+    for email in extract_emails(final_html) or ["- None"]:
         log(f"- {email}")
 
     log("\nExternal Scripts:")
-    for script in extract_scripts(html, domain_for_ssl) or ["- None"]:
+    for script in extract_scripts(final_html, domain_for_ssl) or ["- None"]:
         log(f"- {script}")
 
     log("\nMeta Tags:")
-    for meta in re.findall(r"<meta[^>]+>", html, re.IGNORECASE) or ["- None"]:
+    for meta in re.findall(r"<meta[^>]+>", final_html, re.IGNORECASE) or ["- None"]:
         log(f"- {meta}")
 
     log("\nForm Discovery (via curl grep):")
@@ -209,15 +235,15 @@ def run_deep_recon(target_url):
                 log(f"[!] Shodan lookup failed: {e}")
     else:
         log("[!] Shodan module not installed. Skipping Shodan scan.")
-        log("    → To enable it, install with: sudo apt install python3-pip && pip3 install shodan (optional)")
 
     log("\nDIRB Scan (/usr/share/dirb/wordlists/common.txt):")
     try:
         dirb_result = subprocess.check_output(
-            ["dirb", target_url, "/usr/share/dirb/wordlists/common.txt", "-f"],
+            ["dirb", target_url, "/usr/share/dirb/wordlists/common.txt", "-r", "-S"],
             stderr=subprocess.DEVNULL,
             timeout=600
         ).decode()
+
         for line in dirb_result.strip().split("\n"):
             if "==>" in line or "CODE:" in line:
                 log(line)
