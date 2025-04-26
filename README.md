@@ -123,7 +123,8 @@ VT_API_KEY = "your_key_here"
 
 ## ADDITIONAL TIPS
 
-- The Deep Recon module saves raw HTML pages — inspect them in your browser to discover hidden fields, script injections, and backdoors.  
+- The Deep Recon module saves raw HTML pages — inspect them in your browser to discover hidden fields, script injections, and backdoors.
+- DIRB scan results depend on the structure of the target. Static pages or dead buckets may return no results. 
 - Use tools like `ffuf`, `dirb`, or `gobuster` with custom wordlists for advanced enumeration.  
 - Use `curl -v` to explore redirect chains or form behavior.  
 - Query phishing site IPs directly on [https://shodan.io](https://shodan.io) for infrastructure recon.
