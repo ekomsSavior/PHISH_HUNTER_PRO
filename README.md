@@ -180,4 +180,7 @@ https://github.com/ekomsSavior
 
 https://instagram.com/ekoms.is.my.savior
 
+Check out my Medium article about Phish Hunter Pro-
+
+https://medium.com/@ekoms1/phish-hunter-pro-b3cc30041f91
 
