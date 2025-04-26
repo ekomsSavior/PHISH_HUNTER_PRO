@@ -14,7 +14,7 @@ def run_scan(domain):
     os.makedirs("reports", exist_ok=True)
 
     with open(report_path, "w") as report:
-        report.write(f"=== PHISH HUNTER SCAN REPORT ===\nTarget: {domain}\nTimestamp: {timestamp}\n\n")
+        report.write(f"=== PHISH HUNTER PRO SCAN REPORT ===\nTarget: {domain}\nTimestamp: {timestamp}\n\n")
 
         # DNS Resolution
         try:
@@ -85,23 +85,37 @@ def run_scan(domain):
             report.write("[-] Redirect trace failed\n")
 
         # Passive Recon Links
-        report.write("\n=== Passive Recon ===\n")
+        report.write("\n=== Passive Recon Links ===\n")
         report.write(f"- VirusTotal: https://www.virustotal.com/gui/domain/{safe_domain}\n")
         report.write(f"- URLScan: https://urlscan.io/domain/{safe_domain}\n")
-        report.write(f"- crt.sh: https://crt.sh/?q=%25{safe_domain}\n")
+        report.write(f"- crt.sh (SSL certificates): https://crt.sh/?q={safe_domain}\n")
+        report.write(f"- AbuseIPDB: https://www.abuseipdb.com/check/{safe_domain}\n")
+
+        # Official Reporting Links
+        report.write("\n=== Report This Phishing Site ===\n")
+        report.write("- Google Safe Browsing: https://safebrowsing.google.com/safebrowsing/report_phish/\n")
+        report.write("- APWG Report Phishing: https://apwg.org/reportphishing/\n")
+        report.write("- Microsoft Report Phishing: https://www.microsoft.com/en-us/wphish/\n")
 
         # Final Recommendations
         report.write("\n=== Recommended Next Steps ===\n")
         report.write("1. Report this URL to Google Safe Browsing.\n")
-        report.write("2. Email any abuse contacts found above with this report attached.\n")
-        report.write("3. If necessary, file a complaint via ICANN.\n")
-        report.write("4. Optionally, submit URL to antivirus vendors for blocklisting.\n")
+        report.write("2. Report to APWG and Microsoft.\n")
+        report.write("3. Email any abuse contacts found above.\n")
+        report.write("4. Optionally submit the URL to antivirus vendors.\n")
+        report.write("5. Continue deeper recon with tools like urlscan.io and crt.sh.\n")
 
     print(f"\nScan complete. Report saved to {report_path}")
-    print("\nRecommended Next Steps:")
-    print("1. Report the URL to Google Safe Browsing.")
-    print("2. Contact any abuse emails found and attach the report.")
-    print("3. File a complaint through ICANN if appropriate.")
-    print("4. Submit the URL to antivirus vendors for review.")
-    print("\nStay vigilant")
 
+    print("\nRecommended Next Steps:")
+    print(f"[+] VirusTotal link: https://www.virustotal.com/gui/domain/{safe_domain}")
+    print(f"[+] URLScan link: https://urlscan.io/domain/{safe_domain}")
+    print(f"[+] crt.sh SSL Certs: https://crt.sh/?q={safe_domain}")
+    print(f"[+] AbuseIPDB: https://www.abuseipdb.com/check/{safe_domain}")
+
+    print("\nReport the phishing site:")
+    print("- Google Safe Browsing: https://safebrowsing.google.com/safebrowsing/report_phish/")
+    print("- APWG: https://apwg.org/reportphishing/")
+    print("- Microsoft: https://www.microsoft.com/en-us/wphish/")
+
+    print("\nStay vigilant. Stay protected.")
