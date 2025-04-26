@@ -67,19 +67,18 @@ VT_API_KEY = "your_key_here"
 
 ---
 
-## WHAT DEEP RECON MODULE DOES
+## SCANNER MODULE 
 
-- Follows and logs HTTP redirects  
-- Analyzes SSL certificates via OpenSSL  
-- Extracts metadata: inputs, iframes, scripts, emails, meta tags  
-- Saves raw HTML snapshot and screenshot to the `reports/` folder  
-- Performs form discovery with curl and grep  
-- Runs `nmap` scan with version detection  
-- Queries Shodan for IP intelligence  
-- Checks VirusTotal for malicious reports  
-- Ends with `dirb` directory brute-force scan (may take several minutes)
+  - Pull WHOIS and DNS records
+
+  - Use whatweb to detect technologies used on the page
+
+  - Help you identify red flags like shady registrars or reused infrastructure
+
+  - Provide clickable links to report the site to:
 
 ---
+
 
 ## SPAMMER MODULE
 
@@ -89,19 +88,7 @@ Features
 - Tor SOCKS5 support  
 - Circuit rotation using `pkill -HUP tor` (no config needed)  
 - User-agent randomization  
-- Optional proxy rotation  
-
-**To use:**
-
-Start Tor with
-
-```bash
-sudo systemctl start tor@default
-```
-
-Then select option `[2]` from the CLI and enter a phishing URL.
-
----
+- Optional proxy rotation
 
 ## USING A PROXY LIST
 
@@ -118,6 +105,21 @@ socks5://98.76.54.32:1080
 The tool will automatically use these if Tor is blocked or unavailable.
 
 ---
+
+## WHAT DEEP RECON MODULE DOES
+
+- Follows and logs HTTP redirects  
+- Analyzes SSL certificates via OpenSSL  
+- Extracts metadata: inputs, iframes, scripts, emails, meta tags  
+- Saves raw HTML snapshot and screenshot to the `reports/` folder  
+- Performs form discovery with curl and grep  
+- Runs `nmap` scan with version detection  
+- Queries Shodan for IP intelligence  
+- Checks VirusTotal for malicious reports  
+- Ends with `dirb` directory brute-force scan (may take several minutes)
+
+---
+
 
 ## ADDITIONAL TIPS
 
@@ -160,4 +162,9 @@ Use responsibly. You accept full liability for how you use this software.
 Crafted with soul and purpose by
 
 **ek0ms savi0r**  
+
 https://github.com/ekomsSavior
+
+https://instagram.com/ekoms.is.my.savior
+
+
