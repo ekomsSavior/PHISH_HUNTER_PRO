@@ -16,8 +16,8 @@ except ImportError:
     SHODAN_ENABLED = False
 
 # === API Keys ===
-SHODAN_API_KEY = ""    # Placeholder for future Shodan integration
-VT_API_KEY = ""        # Placeholder for future VT integration
+SHODAN_API_KEY = ""    # Placeholder for your Shodan api
+VT_API_KEY = ""        # Placeholder for future VT api
 
 def extract_emails(html):
     return re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", html)
