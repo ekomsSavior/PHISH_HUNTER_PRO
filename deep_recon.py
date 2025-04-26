@@ -5,7 +5,7 @@ import socket
 import subprocess
 import os
 import time
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 # Try to import Shodan, but don’t crash if it’s missing
 try:
@@ -56,9 +56,9 @@ def run_deep_recon(target_url):
         with open(report_path, "a") as report:
             report.write(line + "\n")
 
-    log(f"\n🕷 Deep Recon on: {target_url}\n")
+    log(f"\nDeep Recon on: {target_url}\n")
 
-    log("🔀 Redirects (via curl -L -I):")
+    log("Redirects (via curl -L -I):")
     try:
         result = subprocess.check_output(["curl", "-s", "-L", "-I", target_url], timeout=15).decode()
         for line in result.strip().split("\n"):
@@ -67,14 +67,68 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] Redirect trace failed: {e}")
 
-    log("\n📜 SSL Certificate Info:")
-    ssl_info = get_ssl_info(base_domain)
+    meta_redirects = []
+    visited = set()
+    current_url = target_url
+
+    log("\nFollowing Meta-Refresh Redirects:")
+
+    while current_url and current_url not in visited:
+        visited.add(current_url)
+        log(f"Visiting: {current_url}")
+
+        try:
+            response = requests.get(current_url, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
+            html = response.text
+
+            parsed_current = urlparse(current_url)
+            safe_filename = parsed_current.netloc.replace(".", "_") + parsed_current.path.replace("/", "_")
+            safe_filename = safe_filename.strip("_")
+            if safe_filename:
+                page_path = f"reports/{safe_filename}_{timestamp}.html"
+                with open(page_path, "w", encoding="utf-8") as f:
+                    f.write(html)
+                log(f"Saved page snapshot: {page_path}")
+
+        except Exception as e:
+            log(f"[!] Failed to fetch {current_url}: {e}")
+            break
+
+        try:
+            meta_refreshes = re.findall(
+                r'<meta[^>]+http-equiv=["\']?refresh["\']?[^>]+content=["\']?\d+;\s*URL=(.*?)["\'>]',
+                html,
+                re.IGNORECASE
+            )
+            if meta_refreshes:
+                meta_url = meta_refreshes[0].strip("'\" ")
+                next_url = urljoin(current_url, meta_url)
+                meta_redirects.append(next_url)
+                current_url = next_url
+            else:
+                break
+        except Exception as e:
+            log(f"[!] Meta-refresh parsing failed: {e}")
+            break
+
+    if meta_redirects:
+        log("\nMeta-Redirect Chain Summary:")
+        for idx, url in enumerate(meta_redirects, 1):
+            log(f"{idx}. {url}")
+    else:
+        log("\nNo meta-refresh redirects followed.")
+
+    parsed = urlparse(target_url)
+    domain_for_ssl = parsed.netloc or parsed.path
+
+    log("\nSSL Certificate Info:")
+    ssl_info = get_ssl_info(domain_for_ssl)
     log(str(ssl_info))
 
-    log("\n📜 OpenSSL x509 Full Cert Dump:")
+    log("\nOpenSSL x509 Full Cert Dump:")
     try:
         openssl_dump = subprocess.check_output(
-            f"echo | openssl s_client -connect {base_domain}:443 2>/dev/null | openssl x509 -noout -text",
+            f"echo | openssl s_client -connect {domain_for_ssl}:443 2>/dev/null | openssl x509 -noout -text",
             shell=True, timeout=15
         ).decode()
         for line in openssl_dump.strip().split("\n"):
@@ -82,39 +136,27 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] OpenSSL cert dump failed: {e}")
 
-    try:
-        response = requests.get(target_url, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
-        html = response.text
-    except Exception as e:
-        log(f"[!] Failed to fetch HTML: {e}")
-        return
-
-    html_path = f"reports/{base_domain}_{timestamp}.html"
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(html)
-    log(f"\n🗂 HTML snapshot saved to: {html_path}")
-
-    log("\n🧾 Input Fields:")
+    log("\nInput Fields:")
     for i in extract_inputs(html) or ["- None"]:
         log(f"- {i}")
 
-    log("\n🪞 Iframes Found:")
+    log("\nIframes Found:")
     for iframe in extract_iframes(html) or ["- None"]:
         log(f"- {iframe}")
 
-    log("\n📧 Emails Found:")
+    log("\nEmails Found:")
     for email in extract_emails(html) or ["- None"]:
         log(f"- {email}")
 
-    log("\n📦 External Scripts:")
-    for script in extract_scripts(html, base_domain) or ["- None"]:
+    log("\nExternal Scripts:")
+    for script in extract_scripts(html, domain_for_ssl) or ["- None"]:
         log(f"- {script}")
 
-    log("\n📎 Meta Tags:")
+    log("\nMeta Tags:")
     for meta in re.findall(r"<meta[^>]+>", html, re.IGNORECASE) or ["- None"]:
         log(f"- {meta}")
 
-    log("\n🕵️‍♀️ Form Discovery (via curl grep):")
+    log("\nForm Discovery (via curl grep):")
     try:
         grep_out = subprocess.check_output(
             f"curl -s {target_url} | grep -iE '(form|action|input)' || true",
@@ -128,17 +170,17 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] Curl grep failed: {e}")
 
-    log("\n📥 Raw HTML Copy (curl -o):")
+    log("\nRaw HTML Copy (curl -o):")
     try:
-        raw_path = f"reports/raw_{base_domain}_{timestamp}.html"
+        raw_path = f"reports/raw_{domain_for_ssl}_{timestamp}.html"
         subprocess.run(["curl", "-s", target_url, "-o", raw_path], timeout=15)
         log(f"Saved raw HTML to {raw_path}")
     except Exception as e:
         log(f"[!] Raw HTML save failed: {e}")
 
-    log("\n📡 Nmap Scan (Top 1000 ports):")
+    log("\nNmap Scan (Top 1000 ports):")
     try:
-        ip = socket.gethostbyname(base_domain)
+        ip = socket.gethostbyname(domain_for_ssl)
         log(f"[DEBUG] Resolved IP: {ip}")
         nmap_result = subprocess.check_output(
             ["nmap", "-sV", "--top-ports", "1000", ip],
@@ -149,10 +191,10 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] Nmap scan failed: {e}")
 
-    log("\n🛰 Shodan Recon:")
+    log("\nShodan Recon:")
     if SHODAN_ENABLED:
         try:
-            ip = socket.gethostbyname(base_domain)
+            ip = socket.gethostbyname(domain_for_ssl)
             api = Shodan(SHODAN_API_KEY)
             data = api.host(ip)
             log(f"IP: {data.get('ip_str', 'N/A')}")
@@ -169,17 +211,17 @@ def run_deep_recon(target_url):
         log("[!] Shodan module not installed. Skipping Shodan scan.")
         log("    → To enable it, install with: sudo apt install python3-pip && pip3 install shodan (optional)")
 
-    log("\n📂 DIRB Scan (/usr/share/dirb/wordlists/common.txt):")
+    log("\nDIRB Scan (/usr/share/dirb/wordlists/common.txt):")
     try:
         dirb_result = subprocess.check_output(
             ["dirb", target_url, "/usr/share/dirb/wordlists/common.txt", "-f"],
             stderr=subprocess.DEVNULL,
             timeout=600
         ).decode()
-        for line in dirb_result.splitlines():
+        for line in dirb_result.strip().split("\n"):
             if "==>" in line or "CODE:" in line:
                 log(line)
     except Exception as e:
         log(f"[!] DIRB scan failed: {e}")
 
-    log("\n🕷 Deep Recon Complete.\n")
+    log("\nDeep Recon Complete.\n")
