@@ -95,27 +95,27 @@ The tool will automatically use these if Tor is blocked or unavailable.
 
 ##  WHAT DEEP RECON MODULE DOES
 
-    Follows and logs HTTP redirects (curl -L -I)
+- Follows and logs HTTP redirects (curl -L -I)
 
-    Live-tracks meta-refresh redirects inside HTML (chases hidden redirect chains)
+-  Live-tracks meta-refresh redirects inside HTML (chases hidden redirect chains)
 
-    Decodes Base64-encoded URLs hidden in redirects or inside page source (e.g., target=BASE64...)
+-   Decodes Base64-encoded URLs hidden in redirects or inside page source (e.g., target=BASE64...)
 
-    Analyzes SSL certificates via OpenSSL (openssl s_client)
+-   Analyzes SSL certificates via OpenSSL (openssl s_client)
 
-    Extracts metadata: input fields, iframes, external scripts, emails, meta tags
+-   Extracts metadata: input fields, iframes, external scripts, emails, meta tags
 
-    Saves a raw HTML snapshot of each visited page to the reports/ folder
+-   Saves a raw HTML snapshot of each visited page to the reports/ folder
 
-    Performs form discovery with curl and grep
+-   Performs form discovery with curl and grep
 
-    Runs an Nmap scan with version detection (nmap -sV --top-ports 1000)
+-   Runs an Nmap scan with version detection (nmap -sV --top-ports 1000)
 
-    Queries Shodan for IP intelligence (optional, if API key installed)
+ -   Queries Shodan for IP intelligence (optional, if API key installed)
 
-    (Coming soon) Checks VirusTotal for malicious reports (placeholder ready)
+ -  (Coming soon) Checks VirusTotal for malicious reports (placeholder ready)
 
-    Runs a DIRB directory brute-force scan (dirb), now more responsive
+  - Runs a DIRB directory brute-force scan (dirb), now more responsive
 ---
 
 ## API KEY SETUP
