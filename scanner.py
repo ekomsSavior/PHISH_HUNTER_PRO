@@ -24,17 +24,17 @@ def run_scan(domain):
         except socket.gaierror:
             report.write(f"[-] Could not resolve domain: {domain}\n")
             print(f"[-] Could not resolve domain")
-            return
 
-        # WHOIS Lookup
+        # WHOIS Lookup (always runs now)
         report.write("\n=== WHOIS ===\n")
         try:
             result = subprocess.check_output(["whois", safe_domain.split("/")[0]], stderr=subprocess.DEVNULL).decode()
             report.write(result + "\n")
-        except:
+        except Exception as e:
             report.write("[-] WHOIS failed\n")
+            result = ""  # Make sure result is empty if WHOIS failed
 
-        # Abuse Contacts Search
+        # Abuse Contacts Search (even if WHOIS failed)
         report.write("\n=== Abuse Contacts ===\n")
         try:
             abuse_lines = []
@@ -50,7 +50,7 @@ def run_scan(domain):
             else:
                 print("\n[-] No abuse contacts found in WHOIS.")
                 report.write("[-] No abuse contacts found in WHOIS.\n")
-        except:
+        except Exception as e:
             print("\n[-] Failed to parse abuse contacts.")
             report.write("[-] Failed to parse abuse contacts.\n")
 
@@ -60,7 +60,7 @@ def run_scan(domain):
             headers = requests.get(f"http://{safe_domain}", timeout=10).headers
             for key, value in headers.items():
                 report.write(f"{key}: {value}\n")
-        except:
+        except Exception as e:
             report.write("[-] Could not retrieve HTTP headers\n")
 
         # Robots.txt
@@ -71,7 +71,7 @@ def run_scan(domain):
                 report.write(response.text + "\n")
             else:
                 report.write("[-] robots.txt not found\n")
-        except:
+        except Exception as e:
             report.write("[-] Error retrieving robots.txt\n")
 
         # Redirect Trace
@@ -81,7 +81,7 @@ def run_scan(domain):
             for r in response.history:
                 report.write(f"{r.status_code} -> {r.url}\n")
             report.write(f"{response.status_code} -> {response.url}\n")
-        except:
+        except Exception as e:
             report.write("[-] Redirect trace failed\n")
 
         # Passive Recon Links
@@ -119,3 +119,4 @@ def run_scan(domain):
     print("- Microsoft: https://www.microsoft.com/en-us/wphish/")
 
     print("\nStay vigilant. Stay protected.")
+
