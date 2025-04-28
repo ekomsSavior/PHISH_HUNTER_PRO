@@ -17,7 +17,7 @@ except ImportError:
 
 # === API Keys ===
 SHODAN_API_KEY = ""    # Placeholder for your Shodan api
-VT_API_KEY = ""        # Placeholder for future VT api
+VT_API_KEY = ""        # Placeholder for your VirusTotal api
 
 def extract_emails(html):
     return re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", html)
@@ -136,7 +136,6 @@ def run_deep_recon(target_url):
     else:
         log("\nNo meta-refresh redirects followed.")
 
-    # After all redirects - check final HTML for base64
     if final_html:
         decoded_targets_final_html = decode_base64_target(final_html)
         if decoded_targets_final_html:
@@ -204,6 +203,31 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] Raw HTML save failed: {e}")
 
+    # --- 🔥 NEW VIRUSTOTAL SECTION 🔥 ---
+    log("\nVirusTotal Domain Report:")
+    if VT_API_KEY:
+        try:
+            headers = {"x-apikey": VT_API_KEY}
+            vt_url = f"https://www.virustotal.com/api/v3/domains/{domain_for_ssl}"
+            vt_response = requests.get(vt_url, headers=headers, timeout=15)
+            if vt_response.status_code == 200:
+                vt_data = vt_response.json()
+                stats = vt_data.get("data", {}).get("attributes", {}).get("last_analysis_stats", {})
+                malicious = stats.get("malicious", 0)
+                suspicious = stats.get("suspicious", 0)
+                harmless = stats.get("harmless", 0)
+                undetected = stats.get("undetected", 0)
+                log(f"Malicious: {malicious}")
+                log(f"Suspicious: {suspicious}")
+                log(f"Harmless: {harmless}")
+                log(f"Undetected: {undetected}")
+            else:
+                log(f"[!] VirusTotal domain lookup failed: {vt_response.status_code}")
+        except Exception as e:
+            log(f"[!] VirusTotal domain lookup error: {e}")
+    else:
+        log("[!] VirusTotal API key not provided. Skipping domain lookup.")
+
     log("\nNmap Scan (Top 1000 ports):")
     try:
         ip = socket.gethostbyname(domain_for_ssl)
@@ -217,10 +241,34 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] Nmap scan failed: {e}")
 
+    # --- 🔥 NEW VIRUSTOTAL IP LOOKUP 🔥 ---
+    log("\nVirusTotal IP Address Report:")
+    if VT_API_KEY:
+        try:
+            headers = {"x-apikey": VT_API_KEY}
+            ip_url = f"https://www.virustotal.com/api/v3/ip_addresses/{ip}"
+            ip_response = requests.get(ip_url, headers=headers, timeout=15)
+            if ip_response.status_code == 200:
+                ip_data = ip_response.json()
+                stats = ip_data.get("data", {}).get("attributes", {}).get("last_analysis_stats", {})
+                malicious = stats.get("malicious", 0)
+                suspicious = stats.get("suspicious", 0)
+                harmless = stats.get("harmless", 0)
+                undetected = stats.get("undetected", 0)
+                log(f"Malicious: {malicious}")
+                log(f"Suspicious: {suspicious}")
+                log(f"Harmless: {harmless}")
+                log(f"Undetected: {undetected}")
+            else:
+                log(f"[!] VirusTotal IP lookup failed: {ip_response.status_code}")
+        except Exception as e:
+            log(f"[!] VirusTotal IP lookup error: {e}")
+    else:
+        log("[!] VirusTotal API key not provided. Skipping IP lookup.")
+
     log("\nShodan Recon:")
     if SHODAN_ENABLED:
         try:
-            ip = socket.gethostbyname(domain_for_ssl)
             api = Shodan(SHODAN_API_KEY)
             data = api.host(ip)
             log(f"IP: {data.get('ip_str', 'N/A')}")
@@ -243,7 +291,6 @@ def run_deep_recon(target_url):
             stderr=subprocess.DEVNULL,
             timeout=600
         ).decode()
-
         for line in dirb_result.strip().split("\n"):
             if "==>" in line or "CODE:" in line:
                 log(line)
