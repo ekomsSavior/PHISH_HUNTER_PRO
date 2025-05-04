@@ -140,6 +140,8 @@ VT_API_KEY = "your_key_here"
 - Use tools like `ffuf`, `dirb`, or `gobuster` with custom wordlists for advanced enumeration.  
 - Use `curl -v` to explore redirect chains or form behavior.  
 - Query phishing site IPs directly on [https://shodan.io](https://shodan.io) for infrastructure recon.
+- Check out **Phish Breaker** — an all-in-one toolkit to smash scams, sweep Google buckets, and run deep forensic scans.  
+Repo: [https://github.com/ekomsSavior/phish_breaker](https://github.com/ekomsSavior/phish_breaker)
 
 ---
 
