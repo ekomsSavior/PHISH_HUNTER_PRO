@@ -4,11 +4,11 @@ Advanced phishing investigation and disruption toolkit written in Python.
 
 ![IMG_4518](https://github.com/user-attachments/assets/7a5d70cd-b3cc-4bc3-94e7-f80d9fa8eeec)
 
-PHISH_HUNTER_PRO is a modular Python-based anti-phishing reconnaissance and disruption toolkit.  
+PHISH_HUNTER_PRO is a modular Python-based anti-phishing reconnaissance and disruption toolkit.
 
-Created by me ekomsSavior, it is designed for security researchers, cyber defenders, and OSINT specialists to investigate and take action against phishing infrastructure.
+Created by **ekomsSavior**, it is designed for security researchers, cyber defenders, and OSINT specialists to investigate and take action against phishing infrastructure.
 
-It performs deep web page analysis, login page spam, open port scanning, SSL certificate inspection, metadata extraction, Shodan lookups, VirusTotal enrichment, and more.
+It performs deep web page analysis, login page disruption, open port scanning, SSL certificate inspection, metadata extraction, Shodan lookups, VirusTotal enrichment, and more.
 
 ---
 
@@ -47,142 +47,141 @@ python3 cli.py
 You’ll see
 
 ```
-[1] Scan Domain           – WHOIS, DNS headers, basic fingerprinting  
-[2] Spam Login Page       – Sends fake logins through Tor + proxy  
-[3] Deep Recon            – Full phishing investigation pipeline
+[1] Scan Domain (single)
+[2] Spam Login Page (single)
+[3] Deep Recon (single)
+[4] Bulk Scan, Spam or Deep Recon
+[0] Exit
 ```
 
 ---
 
-## SCANNER MODULE 
+## SCANNER MODULE
 
-  - Pull WHOIS and DNS records
-
-  - Use whatweb to detect technologies used on the page
-
-  - Help you identify red flags like shady registrars or reused infrastructure
-
-  - Provide clickable links to report the site to:
+- Pulls WHOIS and DNS records
+- Uses WhatWeb to fingerprint technologies
+- Identifies red flags like shady registrars or reused infrastructure
+- Provides direct reporting links
 
 ---
 
-
 ## SPAMMER MODULE
 
-Use the spammer to disrupt phishing login forms with fake randomized logins.
+Disrupt phishing login forms by flooding them with randomized fake logins.
 
-Features
-- Tor SOCKS5 support  
-- Circuit rotation using `pkill -HUP tor` (no config needed)  
-- User-agent randomization  
+**Features**
+- Tor SOCKS5 support
+- Circuit rotation using `pkill -HUP tor` (no extra config)
+- User-agent randomization
 - Optional proxy rotation
+
+---
 
 ## USING A PROXY LIST
 
-To rotate proxies if Tor fails
+If Tor is blocked, rotate proxies:
 
 1. Create a file called `proxy_list.txt` in the project directory.
-2. Add one proxy per line, like this
+2. Add one proxy per line, like:
 
 ```
 http://123.45.67.89:8080
 socks5://98.76.54.32:1080
 ```
 
-The tool will automatically use these if Tor is blocked or unavailable.
+The tool will automatically use these if Tor is unavailable.
 
 ---
 
-##  WHAT DEEP RECON MODULE DOES
+## DEEP RECON MODULE
 
-- Follows and logs HTTP redirects (curl -L -I)
+- Follows and logs HTTP redirects (`curl -L -I`)
+- Tracks meta-refresh redirects inside HTML (chasing hidden redirect chains)
+- Decodes Base64-encoded URLs in redirects or page source (`target=BASE64...`)
+- Analyzes SSL certificates (`openssl s_client`)
+- Extracts metadata: input fields, iframes, external scripts, emails, meta tags
+- Saves raw HTML snapshots to the `reports/` folder
+- Performs form discovery (`curl | grep`)
+- Runs Nmap with version detection (`nmap -sV --top-ports 1000`)
+- Queries Shodan for IP intelligence (optional, if API key provided)
+- Queries VirusTotal for domain and IP reputation
+- Runs DIRB directory brute-force (`dirb`), tuned for responsiveness
 
--  Live-tracks meta-refresh redirects inside HTML (chases hidden redirect chains)
+---
 
--   Decodes Base64-encoded URLs hidden in redirects or inside page source (e.g., target=BASE64...)
+## BULK SCAN MODE (OPTION 4)
 
--   Analyzes SSL certificates via OpenSSL (openssl s_client)
+Run any module across a list of domains:
 
--   Extracts metadata: input fields, iframes, external scripts, emails, meta tags
+1. Prepare a CSV file (e.g., `domains.csv`)
 
--   Saves a raw HTML snapshot of each visited page to the reports/ folder
+```
+phishingsite1.com
+phishingsite2.net
+phishingsite3.org
+```
 
--   Performs form discovery with curl and grep
+2. Select **Option 4** in the menu and point it to your file.
 
--   Runs an Nmap scan with version detection (nmap -sV --top-ports 1000)
+Reports and logs will be saved in the `reports/` folder automatically.
 
- -   Queries Shodan for IP intelligence (optional, if API key installed)
-
- -  (Coming soon) Checks VirusTotal for malicious reports (placeholder ready)
-
-  - Runs a DIRB directory brute-force scan (dirb), now more responsive
 ---
 
 ## API KEY SETUP
 
-The Deep Recon module supports Shodan and VirusTotal lookups.
+The Deep Recon module supports Shodan and VirusTotal.
 
-Edit the top of `deep_recon.py` to insert your keys
+Edit the top of `deep_recon.py` to insert your keys:
 
 ```python
 SHODAN_API_KEY = "your_key_here"
 VT_API_KEY = "your_key_here"
 ```
 
-
 ---
-
 
 ## ADDITIONAL TIPS
 
-- The Deep Recon module saves raw HTML pages — inspect them in your browser to discover hidden fields, script injections, and backdoors.
-- DIRB scan results depend on the structure of the target. Static pages or dead buckets may return no results. 
-- Use tools like `ffuf`, `dirb`, or `gobuster` with custom wordlists for advanced enumeration.  
-- Use `curl -v` to explore redirect chains or form behavior.  
-- Query phishing site IPs directly on [https://shodan.io](https://shodan.io) for infrastructure recon.
-- Check out **Phish Breaker** — an all-in-one toolkit to smash scams, sweep Google buckets, and run deep forensic scans.  
-Repo: [https://github.com/ekomsSavior/phish_breaker](https://github.com/ekomsSavior/phish_breaker)
+- Inspect raw HTML snapshots to uncover hidden form fields, JavaScript traps, and backdoors.
+- DIRB results depend on the site. Dead buckets or static pages may yield no hits.
+- For advanced brute-forcing, use `ffuf`, `dirb`, or `gobuster` with custom wordlists.
+- Explore redirects and forms with `curl -v`.
+- Query phishing IPs on [https://shodan.io](https://shodan.io) for deeper reconnaissance.
+- Check out **Phish Breaker** — an advanced companion toolkit.
+  Repo: [https://github.com/ekomsSavior/phish_breaker](https://github.com/ekomsSavior/phish_breaker)
 
 ---
 
 ## STAY TUNED
 
-This is an evolving project. Future updates will include:
+This project is under active development.
 
-- Real-time dashboards  
-- Advanced evasions  
-- Better visualizations  
-- More automation modules  
+- GraphQL Recon + Attack Surface Scan module coming soon xo.
 
-Watch this repo or follow me on IG for updates.
 
-GitHub: https://github.com/ekomsSavior  
+Follow for updates:
 
-Instagram: https://instagram.com/ekoms.is.my.savior  
+GitHub → https://github.com/ekomsSavior  
+Instagram → https://instagram.com/ekoms.is.my.savior
 
 ---
 
 ## DISCLAIMER
 
-**PHISH_HUNTER_PRO is for ethical use only.**  
+**PHISH_HUNTER_PRO is for ethical, legal use only.**
 
-You must have permission to test on networks.
+You must have explicit permission to test targets.
 
-Use responsibly. You accept full liability for how you use this software.
+Use responsibly. You assume full liability for how you deploy this software.
 
 ---
 
 ## AUTHOR
 
-Crafted with soul and purpose by
+Crafted with purpose by
 
-**ek0ms savi0r**  
+**ek0ms savi0r**
 
-https://github.com/ekomsSavior
-
-https://instagram.com/ekoms.is.my.savior
-
-Check out my Medium article about Phish Hunter Pro-
-
-https://medium.com/@ekoms1/phish-hunter-pro-b3cc30041f91
-
+GitHub → https://github.com/ekomsSavior  
+Instagram → https://instagram.com/ekoms.is.my.savior  
+Medium → https://medium.com/@ekoms1/phish-hunter-pro-b3cc30041f91
