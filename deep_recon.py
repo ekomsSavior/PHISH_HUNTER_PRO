@@ -16,8 +16,8 @@ except ImportError:
     SHODAN_ENABLED = False
 
 # === API Keys ===
-SHODAN_API_KEY = ""    # Placeholder for your Shodan api
-VT_API_KEY = ""        # Placeholder for your VirusTotal api
+SHODAN_API_KEY = "MLtVAT826lP7i8lv6gDeOxa17JD8Ajxe"    # Placeholder for your Shodan api
+VT_API_KEY = "caf398d2059fb5b94088cce52ca804666ef98392afaadcc93c716820191f6d3b"        # Placeholder for your VirusTotal api
 
 def extract_emails(html):
     return re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", html)
@@ -298,3 +298,22 @@ def run_deep_recon(target_url):
         log(f"[!] DIRB scan failed: {e}")
 
     log("\nDeep Recon Complete.\n")
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        target = sys.argv[1]
+        run_deep_recon(target)
+        # ✅ After finishing, read the generated report and print it to stdout
+        parsed = urlparse(target)
+        base_domain = parsed.netloc or parsed.path
+        # Find the most recent matching report (since timestamp may drift)
+        reports = sorted([f for f in os.listdir("reports") if base_domain in f and f.endswith(".txt")], reverse=True)
+        if reports:
+            latest_report = os.path.join("reports", reports[0])
+            with open(latest_report, "r", encoding="utf-8") as f:
+                print(f.read())
+        else:
+            print("[!] No report file generated.")
+    else:
+        print("[!] No target provided.")
