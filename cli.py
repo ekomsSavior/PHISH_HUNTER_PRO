@@ -101,7 +101,7 @@ def display_menu():
     print("\n[1] Scan Domain (single)")
     print("[2] Spam Login Page (single)")
     print("[3] Deep Recon (single)")
-    print("[4] Bulk Scan from File")
+    print("[4] Bulk Scan, Spam or Deep Recon")
     print("[0] Exit\n")
 
 def main():
