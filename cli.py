@@ -1,6 +1,8 @@
 from scanner import run_scan
 from spammer import run_spam
 from deep_recon import run_deep_recon
+from fuzzer import fuzz_menu
+from mini_scanner import run_mini_scanner
 import subprocess
 import csv
 import time
@@ -101,7 +103,9 @@ def display_menu():
     print("\n[1] Scan Domain (single)")
     print("[2] Spam Login Page (single)")
     print("[3] Deep Recon (single)")
-    print("[4] Bulk Scan, Spam or Deep Recon")
+    print("[4] Fuzzing + Attack Surface Discovery")
+    print("[5] Bulk Scan, Spam or Deep Recon")
+    print("[6] Mini Scanner (Param Injection + Reflections)")
     print("[0] Exit\n")
 
 def main():
@@ -120,7 +124,11 @@ def main():
             target = input("Enter domain or URL: ").strip()
             run_deep_recon(target)
         elif choice == "4":
+            fuzz_menu()
+        elif choice == "5":
             run_bulk_scan()
+        elif choice == '6':
+            run_mini_scanner()
         elif choice == '0':
             print("Goodbye.")
             break
