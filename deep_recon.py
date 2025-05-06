@@ -16,8 +16,8 @@ except ImportError:
     SHODAN_ENABLED = False
 
 # === API Keys ===
-SHODAN_API_KEY = "MLtVAT826lP7i8lv6gDeOxa17JD8Ajxe"    # Placeholder for your Shodan api
-VT_API_KEY = "caf398d2059fb5b94088cce52ca804666ef98392afaadcc93c716820191f6d3b"        # Placeholder for your VirusTotal api
+SHODAN_API_KEY = ""    # Placeholder for your Shodan api
+VT_API_KEY = ""        # Placeholder for your VirusTotal api
 
 def extract_emails(html):
     return re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", html)
