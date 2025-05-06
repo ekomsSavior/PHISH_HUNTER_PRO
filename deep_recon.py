@@ -53,6 +53,44 @@ def decode_base64_target(text):
             continue
     return decoded_targets
 
+def run_subdomain_enum(domain, report_dir):
+    sublist_out = os.path.join(report_dir, f"{domain}_subdomains.txt")
+    vuln_out = os.path.join(report_dir, f"{domain}_vuln_subdomains.txt")
+    vuln_patterns = [
+        'No such host', 'unavailable', 'doesn’t exist',
+        'Temporary failure in name resolution', 'Server not found', 'refused to connect'
+    ]
+
+    print("[*] Running subdomain enumeration with Sublist3r...")
+    subprocess.run(['sublist3r', '-d', domain, '-o', sublist_out], check=False)
+    if not os.path.exists(sublist_out):
+        print("[!] No subdomains file generated. Skipping.")
+        return
+
+    with open(sublist_out, 'r') as f:
+        subdomains = f.read().splitlines()
+
+    vuln_subs = []
+    for sub in subdomains:
+        try:
+            r = requests.get(f"http://{sub}", timeout=10)
+            text = r.text.lower()
+            if any(p.lower() in text for p in vuln_patterns):
+                vuln_subs.append(sub)
+        except requests.RequestException:
+            vuln_subs.append(sub)  # assume suspect if it errors out
+
+        dig_result = subprocess.run(['dig', '+short', sub], capture_output=True, text=True)
+        if 'NXDOMAIN' in dig_result.stdout:
+            vuln_subs.append(sub)
+
+    vuln_subs = list(set(vuln_subs))
+    with open(vuln_out, 'w') as f:
+        f.write('\n'.join(vuln_subs))
+
+    print(f"[+] Saved vulnerable subdomains to {vuln_out}")
+    print(f"[+] These can now be used for GraphQL scanning!")
+
 def run_deep_recon(target_url):
     if not target_url.startswith("http"):
         target_url = "https://" + target_url
@@ -67,6 +105,9 @@ def run_deep_recon(target_url):
         print(line)
         with open(report_path, "a") as report:
             report.write(line + "\n")
+    choice = input("[?] Run subdomain enumeration? (y/n): ").strip().lower()
+    if choice == 'y':
+        run_subdomain_enum(base_domain, "reports")
 
     log(f"\nDeep Recon on: {target_url}\n")
 
