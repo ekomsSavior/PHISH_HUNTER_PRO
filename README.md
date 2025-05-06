@@ -106,10 +106,43 @@ The tool will automatically use these if Tor is unavailable.
 - Queries Shodan for IP intelligence (optional, if API key provided)
 - Queries VirusTotal for domain and IP reputation
 - Runs DIRB directory brute-force (`dirb`), tuned for responsiveness
+- Runs Sublist3r for subdomain enumeration
+
+---
+## FUZZING MODULE
+
+- Path fuzzing → https://target/FUZZ
+
+- Header fuzzing → rotates headers, logs server errors
+
+- Parameter fuzzing → https://target/page?id=FUZZ
+
+- Subdomain path fuzzing → fuzzes across enumerated subdomains
+
+---
+## MINI SCANNER MODULE
+
+Injects payloads like <script>alert(1)</script>, '1--, 1 OR 1=1
+
+Scans common params: id, q, search, page, query, redirect, url, file
+
+Rotates headers to test backend behavior
+
+  Flags:
+
+  Reflected input (possible XSS)
+
+  Backend errors (possible SQLi, command injection)
+
+  Behavior changes
+  
+  Interesting status codes (403, 500, 301/302)
+
+Saves individual reports for every scan
 
 ---
 
-## BULK SCAN MODE (OPTION 4)
+## BULK SCAN MODE 
 
 Run any module across a list of domains:
 
@@ -156,14 +189,11 @@ VT_API_KEY = "your_key_here"
 
 This project is under active development.
 
-- GraphQL Recon + Attack Surface Scan module coming soon xo.
-
-
 Follow for updates:
 
 GitHub → https://github.com/ekomsSavior  
 Instagram → https://instagram.com/ekoms.is.my.savior
-
+Medium → https://medium.com/@ekoms1/phish-hunter-pro-b3cc30041f91
 ---
 
 ## DISCLAIMER
