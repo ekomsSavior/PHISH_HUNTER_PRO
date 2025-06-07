@@ -1,5 +1,5 @@
 from scanner import run_scan
-from spammer import run_spam
+from spammer import run_spam, run_flexible_contact_spam
 from deep_recon import run_deep_recon
 from fuzzer import fuzz_menu
 from mini_scanner import run_mini_scanner
@@ -106,6 +106,7 @@ def display_menu():
     print("[4] Fuzzing + Attack Surface Discovery")
     print("[5] Bulk Scan, Spam or Deep Recon")
     print("[6] Mini Scanner (Param Injection + Reflections)")
+    print("[7] Flexible Contact Spammer (toggle fields)")
     print("[0] Exit\n")
 
 def main():
@@ -117,21 +118,36 @@ def main():
         if choice == '1':
             domain = input("Enter domain to scan: ")
             run_scan(domain)
+
         elif choice == '2':
             url = input("Enter phishing URL: ")
             run_spam(url, proxy_file=None, delay_enabled=False, use_tor=False, duration=30)
+
         elif choice == "3":
             target = input("Enter domain or URL: ").strip()
             run_deep_recon(target)
+
         elif choice == "4":
             fuzz_menu()
+
         elif choice == "5":
             run_bulk_scan()
+
         elif choice == '6':
             run_mini_scanner()
+
+        elif choice == '7':
+            url = input("Enter contact form full URL: ")
+            duration = int(input("Duration in seconds: "))
+            proxy_file = input("Proxy file path (leave blank if none): ") or None
+            delay = input("Enable delay between requests? (y/n): ").lower() == 'y'
+            use_tor = input("Use Tor routing? (y/n): ").lower() == 'y'
+            run_flexible_contact_spam(url, duration, proxy_file, delay, use_tor)
+
         elif choice == '0':
             print("Goodbye.")
             break
+
         else:
             print("Invalid choice.")
 
