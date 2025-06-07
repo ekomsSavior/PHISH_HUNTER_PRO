@@ -28,6 +28,18 @@ sudo apt update && sudo apt install tor dirb nmap sublist3r curl python3-request
 sudo apt install python3-socks -y
 ```
 
+Install Faker using pipx
+
+```bash
+sudo apt install pipx -y
+pipx ensurepath
+```
+Close + reopen your terminal 
+
+```bash
+pipx install faker
+```
+
 ---
 
 ## RUNNING THE TOOL
