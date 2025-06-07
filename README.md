@@ -105,7 +105,7 @@ The tool will automatically use these if Tor is unavailable.
 
 ---
 
-##CONTACT FORM SPAMMER MODULE
+## CONTACT FORM SPAMMER MODULE
 
 Flood phishing contact forms with realistic spam using dynamic field toggles and Faker-generated data.
 
