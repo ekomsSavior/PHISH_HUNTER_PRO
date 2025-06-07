@@ -105,6 +105,20 @@ The tool will automatically use these if Tor is unavailable.
 
 ---
 
+##CONTACT FORM SPAMMER MODULE
+
+Flood phishing contact forms with realistic spam using dynamic field toggles and Faker-generated data.
+
+Features
+
+- Select which fields to include (first name, last name, email, phone, address, etc)
+- Add custom field names and value
+- Handle dropdown/select boxes (e.g., “Best time to contact you”)
+- Randomized insults or abuse report messages
+- User-agent rotation
+- Tor and proxy support
+- Logs each attempt with full payload
+
 ## DEEP RECON MODULE
 
 - Follows and logs HTTP redirects (`curl -L -I`)
