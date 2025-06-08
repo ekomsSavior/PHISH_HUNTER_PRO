@@ -24,7 +24,7 @@ cd PHISH_HUNTER_PRO
 Install required tools and libraries
 
 ```bash
-sudo apt update && sudo apt install tor dirb nmap sublist3r curl python3-requests -y
+sudo apt update && sudo apt install tor dirb nmap sublist3r curl python3-requests python3-scapy -y
 sudo apt install python3-socks -y
 ```
 
@@ -190,7 +190,48 @@ Edit the top of `deep_recon.py` to insert your keys:
 SHODAN_API_KEY = "your_key_here"
 VT_API_KEY = "your_key_here"
 ```
+---
 
+## DoS MODULE (STANDARD)
+
+Launch multi-threaded denial-of-service attacks against phishing sites.
+
+**Features**
+- Configurable thread count (e.g. 50, 100, 250)
+- Supports both HTTP and HTTPS targets
+- Sends randomized header floods using valid syntax
+- Targets `GET` endpoints only for stealth and compatibility
+- Basic request delay randomization to avoid instant detection
+
+**Usage**  
+Select option `[8] DoS Attack Module (multi-protocol)` in the CLI and provide:
+- The phishing URL (http or https)
+- Number of threads to use
+
+Note: Use responsibly. Some phishing sites are behind WAF/CDNs and may not respond immediately.
+
+---
+
+## HARDCORE DoS MODE
+
+An advanced, stealth-capable version of the DoS engine.
+
+**Features**
+- Tor routing for obfuscation
+- Raw socket option (HTTP only)
+- Header randomization + bot-like behavior
+- Supports higher thread volume (e.g. 200–1000)
+- Includes failsafe to bypass if Tor is unreachable
+
+**Usage**
+Choose `[9] Hardcore DoS Mode (fast + raw)` and enter:
+- Target URL
+- Thread count
+- Whether to use Tor (y/n)
+
+Use this with discretion, especially during red team demos or controlled takedowns.
+
+---
 ---
 
 ## ADDITIONAL TIPS
