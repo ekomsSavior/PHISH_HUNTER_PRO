@@ -175,6 +175,8 @@ def firestorm_mode(target, threads):
         time.sleep(10)
 
 def start_dos(target, threads, mode="http", use_tor=False):
+    if not target.startswith("http://") and not target.startswith("https://"):
+        target = "http://" + target
     print(f"Starting {mode.upper()} attack on {target} with {threads} threads. Tor: {'ON' if use_tor else 'OFF'}")
 
     if mode == "firestorm":
