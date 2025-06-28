@@ -1,7 +1,14 @@
+#!/usr/bin/env python3
 import requests
 import os
 import time
+import random
+import uuid
 
+REPORTS_DIR = "reports"
+USE_TOR = True  # Set to True to enable Tor proxy
+
+# Expanded header rotation list
 HEADERS_LIST = [
     {"User-Agent": "Mozilla/5.0"},
     {"User-Agent": "Googlebot"},
@@ -10,9 +17,24 @@ HEADERS_LIST = [
     {"X-Originating-IP": "127.0.0.1"},
     {"X-Requested-With": "XMLHttpRequest"},
     {"Referer": "https://google.com"},
+    {"Cache-Control": "no-cache"},
+    {"X-Request-ID": str(uuid.uuid4())},
+    {"DNT": "1"},
+    {"Upgrade-Insecure-Requests": "1"}
 ]
 
-REPORTS_DIR = "reports"
+def get_random_headers():
+    base = random.choice(HEADERS_LIST)
+    base["X-Request-ID"] = str(uuid.uuid4())
+    return base
+
+def get_proxies():
+    if USE_TOR:
+        return {
+            "http": "socks5h://127.0.0.1:9050",
+            "https": "socks5h://127.0.0.1:9050"
+        }
+    return {}
 
 def save_report_line(report_path, line):
     os.makedirs(REPORTS_DIR, exist_ok=True)
@@ -27,49 +49,84 @@ def load_wordlist(path):
         print(f"[!] Wordlist file not found: {path}")
         return []
 
+def send_request(url, headers=None):
+    delay()
+    try:
+        headers = headers or get_random_headers()
+        r = requests.get(url, headers=headers, proxies=get_proxies(), timeout=10)
+        code = r.status_code
+
+        if code == 429:
+            wait = int(r.headers.get("Retry-After", random.randint(5, 15)))
+            print(f"[!] 429 Too Many Requests — Sleeping {wait}s")
+            time.sleep(wait + 1)
+
+        if code not in [404, 400]:
+            print(f"[!] {url} → {code}")
+        return r
+
+    except Exception as e:
+        print(f"[!] Request error at {url}: {e}")
+        return None
+
+def delay():
+    if SPEED_MODE == "1":  # Fast
+        return
+    elif SPEED_MODE == "2":  # Normal
+        time.sleep(random.uniform(1.5, 3.5))
+    elif SPEED_MODE == "3":  # Stealth
+        time.sleep(random.uniform(5.0, 7.5))
+
 def fuzz_path(target, wordlist, report_path):
     print(f"[+] Starting path fuzz on {target}")
-    for word in wordlist:
+    seen = set()
+    for i, word in enumerate(wordlist):
         url = f"{target.rstrip('/')}/{word}"
-        try:
-            r = requests.get(url, timeout=10)
-            if r.status_code not in [404, 400]:
-                msg = f"[!] {url} → {r.status_code}"
-                print(msg)
-                save_report_line(report_path, msg)
-        except Exception as e:
-            msg = f"[!] Request error at {url}: {e}"
+        if url in seen:
+            continue
+        seen.add(url)
+
+        r = send_request(url)
+        if r and r.status_code not in [404, 400]:
+            msg = f"[!] {url} → {r.status_code}"
             print(msg)
             save_report_line(report_path, msg)
+        if i % 10 == 0:
+            time.sleep(3)
 
 def fuzz_headers(target, report_path):
     print(f"[+] Starting header fuzz on {target}")
-    for header in HEADERS_LIST:
-        try:
-            r = requests.get(target, headers=header, timeout=10)
-            if r.status_code >= 400:
-                msg = f"[!] {target} with {header} → {r.status_code}"
-                print(msg)
-                save_report_line(report_path, msg)
-        except Exception as e:
-            msg = f"[!] Request error: {e}"
+    seen = set()
+    for i, header in enumerate(HEADERS_LIST):
+        url = f"{target}"
+        if str(header) in seen:
+            continue
+        seen.add(str(header))
+
+        r = send_request(url, headers=header)
+        if r and r.status_code >= 400:
+            msg = f"[!] {target} with {header} → {r.status_code}"
             print(msg)
             save_report_line(report_path, msg)
+        if i % 10 == 0:
+            time.sleep(3)
 
 def fuzz_params(target, wordlist, report_path):
     print(f"[+] Starting param fuzz on {target}")
-    for word in wordlist:
+    seen = set()
+    for i, word in enumerate(wordlist):
         url = f"{target}?id={word}"
-        try:
-            r = requests.get(url, timeout=10)
-            if r.status_code not in [404, 400]:
-                msg = f"[!] {url} → {r.status_code}"
-                print(msg)
-                save_report_line(report_path, msg)
-        except Exception as e:
-            msg = f"[!] Request error at {url}: {e}"
+        if url in seen:
+            continue
+        seen.add(url)
+
+        r = send_request(url)
+        if r and r.status_code not in [404, 400]:
+            msg = f"[!] {url} → {r.status_code}"
             print(msg)
             save_report_line(report_path, msg)
+        if i % 10 == 0:
+            time.sleep(3)
 
 def fuzz_subdomains(file_path, wordlist, report_path):
     try:
@@ -80,20 +137,22 @@ def fuzz_subdomains(file_path, wordlist, report_path):
         return
 
     for sub in subdomains:
-        for word in wordlist:
+        for i, word in enumerate(wordlist):
             url = f"http://{sub}/{word}"
-            try:
-                r = requests.get(url, timeout=10)
-                if r.status_code not in [404, 400]:
-                    msg = f"[!] {url} → {r.status_code}"
-                    print(msg)
-                    save_report_line(report_path, msg)
-            except Exception as e:
-                msg = f"[!] Request error at {url}: {e}"
+            if url in seen:
+                continue
+            seen.add(url)
+
+            r = send_request(url)
+            if r and r.status_code not in [404, 400]:
+                msg = f"[!] {url} → {r.status_code}"
                 print(msg)
                 save_report_line(report_path, msg)
+            if i % 10 == 0:
+                time.sleep(3)
 
 def fuzz_menu():
+    global SPEED_MODE
     target = input("Enter single domain or path to subdomains file: ").strip()
     wordlist_path = input("Enter fuzzing wordlist path (default: wordlist.txt): ").strip()
     if not wordlist_path:
@@ -102,6 +161,14 @@ def fuzz_menu():
     wordlist = load_wordlist(wordlist_path)
     if not wordlist:
         return
+
+    print("""
+Select Fuzzing Speed:
+[1] Fast (No delay)
+[2] Normal (2–4s delay)
+[3] Stealth (5–7s + full header + TOR)
+""")
+    SPEED_MODE = input("Choose fuzz mode [1/2/3]: ").strip()
 
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     if os.path.isfile(target):
