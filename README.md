@@ -56,8 +56,14 @@ You’ll see
 [1] Scan Domain (single)
 [2] Spam Login Page (single)
 [3] Deep Recon (single)
-[4] Bulk Scan, Spam or Deep Recon
+[4] Fuzzing + Attack Surface Discovery
+[5] Bulk Scan, Spam or Deep Recon
+[6] Mini Scanner (Param Injection + Reflections)
+[7] Flexible Contact Spammer (toggle fields)
+[8] DoS Attack Module (multi-protocol)
+[9] Hardcore DoS Mode (fast + raw)
 [0] Exit
+
 ```
 
 ---
