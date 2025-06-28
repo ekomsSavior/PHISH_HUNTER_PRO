@@ -7,6 +7,7 @@ from fuzzer import fuzz_menu
 from mini_scanner import run_mini_scanner
 from dos_attack import start_dos
 from dos_attack_hardcore import start_dos as start_dos_hardcore
+from phish_disruptor import mass_param_bomb, full_disruption
 
 import subprocess
 import csv
@@ -114,6 +115,8 @@ def display_menu():
     print("[7] Flexible Contact Spammer (toggle fields)")
     print("[8] DoS Attack Module (multi-protocol)")
     print("[9] Hardcore DoS Mode (fast + raw)")
+    print("[10] Mass Param Bombing / SQLi Fuzz Loop 🧨")
+    print("[11] Full Disruption Script (Spam + DoS + Fuzz) 💀")
     print("[0] Exit\n")
 
 def main():
@@ -187,6 +190,14 @@ def main():
             mode = mode_map.get(mode_choice, "http")
 
             start_dos_hardcore(url, threads, mode, use_tor)
+
+        elif choice == "10":
+            target_url = input("Target full URL (e.g. https://example.com/us): ")
+            mass_param_bomb(target_url)
+
+        elif choice == "11":
+            target_url = input("Target root URL (e.g. https://example.com): ")
+            full_disruption(target_url)
 
         elif choice == '0':
             print("Goodbye.")
