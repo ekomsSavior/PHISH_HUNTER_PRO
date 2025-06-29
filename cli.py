@@ -118,7 +118,7 @@ def display_menu():
     print("[9] Hardcore DoS Mode (fast + raw)")
     print("[10] Mass Param Bombing / SQLi Fuzz Loop ")
     print("[11] Full Disruption Script (Spam + DoS + Fuzz) ")
-    print("[12] XSS Payload Injector (Reflected)")
+    print("[12] XSS Payload Injector (Reflected & Dom)")
     print("[0] Exit\n")
 
 def main():
