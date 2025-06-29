@@ -6,11 +6,14 @@ Advanced phishing investigation and disruption toolkit written in Python.
 
 ![IMG\_4518](https://github.com/user-attachments/assets/7a5d70cd-b3cc-4bc3-94e7-f80d9fa8eeec)
 
-PHISH\_HUNTER\_PRO is a modular Python-based anti-phishing reconnaissance and disruption toolkit.
 
-Created by **ekomsSavior**, it is designed for security researchers, cyber defenders, and OSINT specialists to investigate and take action against phishing infrastructure.
+**PHISH\_HUNTER\_PRO** is a modular Python toolkit for investigating and disrupting phishing websites.
 
-It performs deep web page analysis, login page disruption, open port scanning, SSL certificate inspection, metadata extraction, Shodan lookups, VirusTotal enrichment, and more.
+It includes tools for scanning, form flooding, XSS and SQLi fuzzing, denial-of-service (DoS) disruption, open port scanning, SSL certificate inspection, and metadata analysis. 
+The framework supports Tor routing, proxy rotation, and integrates with services like Shodan and VirusTotal.
+
+Built for security researchers, OSINT analysts, and defenders tracking malicious infrastructure.
+
 
 ---
 
