@@ -62,8 +62,9 @@ You’ll see
 [7] Flexible Contact Spammer (toggle fields)
 [8] DoS Attack Module (multi-protocol)
 [9] Hardcore DoS Mode (fast + raw)
-[10] Mass Param Bombing/SQLi Fuzz Loop 
+[10] Mass Param Bombing / SQLi Fuzz Loop 
 [11] Full Disruption Script (Spam + DoS + Fuzz) 
+[12] XSS Payload Injector (Reflected & Dom)
 [0] Exit
 
 
