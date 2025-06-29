@@ -29,7 +29,7 @@ cd PHISH_HUNTER_PRO
 Install required tools and libraries
 
 ```bash
-sudo apt update && sudo apt install tor dirb nmap sublist3r curl python3-requests python3-scapy -y
+sudo apt update && sudo apt install tor parallel dirb nmap sublist3r curl python3-requests python3-scapy -y
 sudo apt install python3-socks -y
 ```
 
