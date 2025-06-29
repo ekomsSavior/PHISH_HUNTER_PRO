@@ -8,6 +8,7 @@ from mini_scanner import run_mini_scanner
 from dos_attack import start_dos
 from dos_attack_hardcore import start_dos as start_dos_hardcore
 from phish_disruptor import mass_param_bomb, full_disruption
+from xss_injector import run_injector  # ← Fixed here
 
 import subprocess
 import csv
@@ -115,8 +116,9 @@ def display_menu():
     print("[7] Flexible Contact Spammer (toggle fields)")
     print("[8] DoS Attack Module (multi-protocol)")
     print("[9] Hardcore DoS Mode (fast + raw)")
-    print("[10] Mass Param Bombing / SQLi Fuzz Loop 🧨")
-    print("[11] Full Disruption Script (Spam + DoS + Fuzz) 💀")
+    print("[10] Mass Param Bombing / SQLi Fuzz Loop ")
+    print("[11] Full Disruption Script (Spam + DoS + Fuzz) ")
+    print("[12] XSS Payload Injector (Reflected)")
     print("[0] Exit\n")
 
 def main():
@@ -198,6 +200,9 @@ def main():
         elif choice == "11":
             target_url = input("Target root URL (e.g. https://example.com): ")
             full_disruption(target_url)
+
+        elif choice == "12":
+            run_injector()  # ✅ use wrapper with interactive mode choice
 
         elif choice == '0':
             print("Goodbye.")
