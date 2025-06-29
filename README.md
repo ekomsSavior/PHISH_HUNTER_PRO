@@ -148,28 +148,49 @@ Features
 
 ## FUZZING MODULE
 
-* Path fuzzing → [https://target/FUZZ](https://target/FUZZ)
-* Header fuzzing → rotates headers, logs server errors
-* Parameter fuzzing → [https://target/page?id=FUZZ](https://target/page?id=FUZZ)
-* Subdomain path fuzzing → fuzzes across enumerated subdomains
+Uncover hidden routes, vulnerable parameters, WAF misconfigurations, and insecure header handling with this adaptive fuzzing engine.
+
+**Features**
+
+* **Path fuzzing** → `https://target/FUZZ`
+* **Header fuzzing** → Rotates attacker-like headers (`sqlmap`, `Googlebot`, `X-Forwarded-For`) to provoke error responses
+* **Parameter fuzzing** → `https://target/page?id=FUZZ`
+* **Subdomain path fuzzing** → Probes enumerated subdomains (`http://subdomain.tld/FUZZ`)
+* **Speed Profiles** → Fast, Normal, and Stealth modes (adds delay + TOR)
+* **429 Detection** → Handles rate-limiting with automatic backoff
+* **Tor + Proxy Support** → Fully integrated SOCKS5 routing and fallbacks
+* **Clean Report Output** → All findings saved to `reports/` with timestamps
+
+This module is ideal for discovering logic bugs, broken access control, shadow files, and misconfigured phishing infrastructure.
+
 
 ---
 
 ## MINI SCANNER MODULE
 
-Injects payloads like `<script>alert(1)</script>`, `'1--`, `1 OR 1=1`
-Scans common params: `id`, `q`, `search`, `page`, `query`, `redirect`, `url`, `file`
-Rotates headers to test backend behavior
+Fast and lightweight param scanner designed to quickly flag injectable fields.
 
-**Flags:**
+**Features**
 
-* Reflected input (possible XSS)
-* Backend errors (possible SQLi, command injection)
-* Behavior changes
-* Interesting status codes (403, 500, 301/302)
+* Injects payloads like:
+  `<script>alert(1)</script>`, `'1--`, `1 OR 1=1`
+* Scans common parameters:
+  `id`, `q`, `search`, `page`, `query`, `redirect`, `url`, `file`
+* Rotates headers (`sqlmap`, `Googlebot`, `X-Forwarded-For`) to observe backend behavior
 
-📁 Saves individual reports for every scan
-📁 Saves injection targets to `loot/param_targets.txt` for use in Module 12
+**Flags and Detections**
+
+* **Reflected Input** → potential **XSS**
+* **Backend Errors** → SQLi, LFI, command injection hints
+* **Behavioral Shifts** → redirects, blank pages, altered content
+* **Interesting Status Codes** → 403, 500, 301/302
+
+**Output**
+
+ Saves a detailed report to the `reports/` folder
+ Logs all discovered injection points to `loot/param_targets.txt` (for use in Module 12)
+
+Perfect for quick triage of phishing panels and low-hanging bugs in scam infrastructure.
 
 ---
 
