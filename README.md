@@ -188,7 +188,7 @@ Fast and lightweight param scanner designed to quickly flag injectable fields.
 **Output**
 
  Saves a detailed report to the `reports/` folder
- Logs all discovered injection points to `loot/param_targets.txt` (for use in Module 12)
+ Logs all discovered injection points to `loot/param_targets.txt` (for use in Module 12: XSS Payload Injector)
 
 Perfect for quick triage of phishing panels and low-hanging bugs in scam infrastructure.
 
