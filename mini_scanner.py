@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import requests
 import time
 import os
@@ -34,9 +35,12 @@ def mini_scan(target):
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     domain = target.split("//")[-1].replace("/", "_")
     report_file = f"reports/{domain}_miniscan_{timestamp}.txt"
+    loot_file = "loot/param_targets.txt"
 
     if not os.path.exists("reports"):
         os.makedirs("reports")
+    if not os.path.exists("loot"):
+        os.makedirs("loot")
 
     baseline_url = f"{target}?id=test"
     try:
@@ -54,6 +58,7 @@ def mini_scan(target):
     for param in common_params:
         for payload in payloads:
             url = f"{target}?{param}={payload}"
+            clean_url = f"{target}?{param}=test"  # auto-cleaned
             for header in headers_list:
                 try:
                     r = requests.get(url, headers=header, timeout=10)
@@ -79,6 +84,10 @@ def mini_scan(target):
                     if changed:
                         print("    ⚠️ Behavior change")
                         msg += " | Behavior Changed"
+                    if any([reflected, backend_error, changed, status in [403,500,301,302]]):
+                        with open(loot_file, "a") as loot:
+                            loot.write(clean_url + "\n")
+                        print(f"    ✔ Param added for XSS Injector → {clean_url}")
                     if not any([reflected, backend_error, changed, status in [403,500,301,302]]):
                         print("    ✔️ Nothing interesting detected")
                         msg += " | No Issue"
@@ -92,6 +101,7 @@ def mini_scan(target):
                         f.write(f"[!] {url} with {header} → ERROR: {e}\n")
 
     print(f"\n[✔] Mini scan complete. Report saved to {report_file}")
+    print(f"[✔] Clean URLs saved to {loot_file} for XSS Injector")
 
 def run_mini_scanner():
     target = input("Enter domain (e.g., https://example.com): ").strip()
@@ -101,4 +111,3 @@ def run_mini_scanner():
 
 if __name__ == "__main__":
     run_mini_scanner()
-
