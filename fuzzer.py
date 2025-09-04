@@ -128,17 +128,25 @@ def fuzz_params(target, wordlist, report_path):
         if i % 10 == 0:
             time.sleep(3)
 
-def fuzz_subdomains(file_path, wordlist, report_path):
-    try:
-        with open(file_path) as f:
-            subdomains = [line.strip() for line in f if line.strip()]
-    except FileNotFoundError:
-        print(f"[!] Subdomain file not found: {file_path}")
-        return
+def fuzz_subdomains(file_path_or_domain, wordlist, report_path):
+    seen = set()
+
+    if os.path.isfile(file_path_or_domain):
+        try:
+            with open(file_path_or_domain) as f:
+                subdomains = [line.strip() for line in f if line.strip()]
+        except FileNotFoundError:
+            print(f"[!] Subdomain file not found: {file_path_or_domain}")
+            return
+    else:
+        subdomains = [file_path_or_domain]
 
     for sub in subdomains:
+        if not sub.startswith("http://") and not sub.startswith("https://"):
+            sub = "http://" + sub
+
         for i, word in enumerate(wordlist):
-            url = f"http://{sub}/{word}"
+            url = f"{sub.rstrip('/')}/{word}"
             if url in seen:
                 continue
             seen.add(url)
@@ -148,6 +156,7 @@ def fuzz_subdomains(file_path, wordlist, report_path):
                 msg = f"[!] {url} → {r.status_code}"
                 print(msg)
                 save_report_line(report_path, msg)
+
             if i % 10 == 0:
                 time.sleep(3)
 
