@@ -131,17 +131,21 @@ def fuzz_params(target, wordlist, report_path):
 def fuzz_subdomains(file_path_or_domain, wordlist, report_path):
     seen = set()
 
+    # Decide if it's a file or a single domain
     if os.path.isfile(file_path_or_domain):
         try:
             with open(file_path_or_domain) as f:
                 subdomains = [line.strip() for line in f if line.strip()]
+            print(f"[+] Loaded {len(subdomains)} subdomains from {file_path_or_domain}")
         except FileNotFoundError:
             print(f"[!] Subdomain file not found: {file_path_or_domain}")
             return
     else:
         subdomains = [file_path_or_domain]
+        print(f"[+] Using single domain: {file_path_or_domain}")
 
     for sub in subdomains:
+        # Add protocol if missing
         if not sub.startswith("http://") and not sub.startswith("https://"):
             sub = "http://" + sub
 
@@ -152,9 +156,9 @@ def fuzz_subdomains(file_path_or_domain, wordlist, report_path):
             seen.add(url)
 
             r = send_request(url)
-            if r and r.status_code not in [404, 400]:
-                msg = f"[!] {url} → {r.status_code}"
-                print(msg)
+            if r:
+                msg = f"[{r.status_code}] {url}"
+                print(msg)  # always show status
                 save_report_line(report_path, msg)
 
             if i % 10 == 0:
