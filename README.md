@@ -36,7 +36,7 @@ sudo apt install python3-socks -y
 Install Faker
 
 ```bash
-pip3 install Faker --break-system-packages                #faker is for the contact form spammer, if your not interested in that module you can skip faker install
+pip3 install Faker --break-system-packages  
 ```
 
 ---
