@@ -15,6 +15,13 @@ try:
 except ImportError:
     SHODAN_ENABLED = False
 
+# Optional BeautifulSoup support for richer form parsing
+try:
+    from bs4 import BeautifulSoup
+    BS4_AVAILABLE = True
+except ImportError:
+    BS4_AVAILABLE = False
+
 # === API Keys ===
 SHODAN_API_KEY = ""    # Placeholder for your Shodan api
 VT_API_KEY = ""        # Placeholder for your VirusTotal api
@@ -31,6 +38,97 @@ def extract_iframes(html):
 def extract_scripts(html, domain):
     scripts = re.findall(r"<script[^>]+src=['\"]?([^\"'>]+)", html, re.IGNORECASE)
     return [s for s in scripts if domain not in s]
+
+def extract_form_details(html, base_url):
+    """
+    Returns a list of form dicts:
+    {
+        "index": 1,
+        "method": "POST",
+        "action": "https://example.com/wp-admin/admin-ajax.php",
+        "inputs": [
+            {
+                "name": "form_fields[email]",
+                "type": "email",
+                "id": "fld_123",
+                "placeholder": "Email",
+                "value": "",
+            },
+            ...
+        ]
+    }
+    """
+    forms = []
+
+    if BS4_AVAILABLE:
+        # BeautifulSoup path (better parsing)
+        soup = BeautifulSoup(html, "html.parser")
+        for idx, form in enumerate(soup.find_all("form"), start=1):
+            raw_action = form.get("action") or ""
+            method = (form.get("method") or "GET").upper()
+            action = urljoin(base_url, raw_action) if raw_action else ""
+
+            inputs = []
+            for inp in form.find_all("input"):
+                inputs.append({
+                    "name": inp.get("name"),
+                    "type": (inp.get("type") or "text").lower(),
+                    "id": inp.get("id"),
+                    "placeholder": inp.get("placeholder"),
+                    "value": inp.get("value"),
+                })
+
+            forms.append({
+                "index": idx,
+                "method": method,
+                "action": action,
+                "inputs": inputs,
+            })
+    else:
+        # Regex fallback if bs4 isn't installed
+        form_blocks = re.findall(
+            r"(<form.*?</form>)",
+            html,
+            re.IGNORECASE | re.DOTALL
+        )
+
+        for idx, block in enumerate(form_blocks, start=1):
+            action_match = re.search(
+                r'action=["\']?([^"\'> ]+)',
+                block,
+                re.IGNORECASE
+            )
+            method_match = re.search(
+                r'method=["\']?([^"\'> ]+)',
+                block,
+                re.IGNORECASE
+            )
+
+            raw_action = action_match.group(1) if action_match else ""
+            method = (method_match.group(1) if method_match else "GET").upper()
+            action = urljoin(base_url, raw_action) if raw_action else ""
+
+            input_names = re.findall(
+                r'<input[^>]*name=["\']?([^"\'> ]+)',
+                block,
+                re.IGNORECASE
+            )
+            inputs = [{
+                "name": n,
+                "type": "unknown",
+                "id": None,
+                "placeholder": None,
+                "value": None
+            } for n in input_names]
+
+            forms.append({
+                "index": idx,
+                "method": method,
+                "action": action,
+                "inputs": inputs,
+            })
+
+    return forms
 
 def get_ssl_info(domain):
     try:
@@ -73,7 +171,7 @@ def run_subdomain_enum(domain, report_dir):
     vuln_subs = []
     for sub in subdomains:
         try:
-            r = requests.get(f"http://{sub}", timeout=10)
+            r = requests.get(f"http://sub", timeout=10)
             text = r.text.lower()
             if any(p.lower() in text for p in vuln_patterns):
                 vuln_subs.append(sub)
@@ -202,9 +300,64 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] OpenSSL cert dump failed: {e}")
 
+    # === ORIGINAL INPUT FIELDS VIEW (unchanged) ===
     log("\nInput Fields:")
     for i in extract_inputs(final_html) or ["- None"]:
         log(f"- {i}")
+
+    # === NEW: RICH FORM ANALYSIS SECTION ===
+    if final_html:
+        log("\nForm Analysis (Fields + Actions):")
+        base_for_forms = current_url or target_url
+        forms = extract_form_details(final_html, base_for_forms)
+
+        if not forms:
+            log("- No forms found")
+        else:
+            for form in forms:
+                log(f"- Form #{form['index']}")
+                log(f"    Method: {form['method']}")
+                log(f"    Action: {form['action'] or '(no action specified)'}")
+
+                if not form["inputs"]:
+                    log("    Inputs: (none)")
+                    continue
+
+                log("    Inputs:")
+                for inp in form["inputs"]:
+                    name = inp.get("name")
+                    ftype = (inp.get("type") or "text").lower()
+                    placeholder = inp.get("placeholder")
+                    iid = inp.get("id")
+                    value = inp.get("value")
+
+                    # Simple heuristics to flag “interesting” fields
+                    flags = []
+                    lname = (name or "").lower() if name else ""
+
+                    if any(k in lname for k in ["pass", "pwd", "psw"]):
+                        flags.append("password-ish")
+                    if any(k in lname for k in ["email", "e-mail", "user", "login", "userid"]):
+                        flags.append("credential-ish")
+                    if any(k in lname for k in ["card", "cc", "cvv", "cvc", "iban"]):
+                        flags.append("payment-ish")
+                    if any(k in lname for k in ["otp", "code", "token", "sms"]):
+                        flags.append("2FA-ish")
+                    if any(k in lname for k in ["phone", "tel", "mobile"]):
+                        flags.append("phone-ish")
+
+                    flag_str = f"  [flags: {', '.join(flags)}]" if flags else ""
+
+                    log(
+                        f"      • name={name} "
+                        f"type={ftype} "
+                        f"id={iid} "
+                        f"placeholder={placeholder} "
+                        f"default={value}{flag_str}"
+                    )
+    else:
+        log("\nForm Analysis (Fields + Actions):")
+        log("- No HTML content fetched; skipping form analysis.")
 
     log("\nIframes Found:")
     for iframe in extract_iframes(final_html) or ["- None"]:
@@ -244,7 +397,7 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] Raw HTML save failed: {e}")
 
-    # --- 🔥 NEW VIRUSTOTAL SECTION 🔥 ---
+    # ---  VIRUSTOTAL DOMAIN SECTION  ---
     log("\nVirusTotal Domain Report:")
     if VT_API_KEY:
         try:
@@ -282,7 +435,7 @@ def run_deep_recon(target_url):
     except Exception as e:
         log(f"[!] Nmap scan failed: {e}")
 
-    # --- 🔥 NEW VIRUSTOTAL IP LOOKUP 🔥 ---
+    # ---  VIRUSTOTAL IP LOOKUP  ---
     log("\nVirusTotal IP Address Report:")
     if VT_API_KEY:
         try:
@@ -345,7 +498,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
         run_deep_recon(target)
-        # ✅ After finishing, read the generated report and print it to stdout
+        #  After finishing, read the generated report and print it to stdout
         parsed = urlparse(target)
         base_domain = parsed.netloc or parsed.path
         # Find the most recent matching report (since timestamp may drift)
