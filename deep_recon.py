@@ -26,18 +26,44 @@ except ImportError:
 SHODAN_API_KEY = ""    # Placeholder for your Shodan api
 VT_API_KEY = ""        # Placeholder for your VirusTotal api
 
+# === Tor ===
+TOR_SOCKS = "socks5h://127.0.0.1:9050"
+
+
+def build_proxies(use_tor):
+    if not use_tor:
+        return None
+    return {
+        "http": TOR_SOCKS,
+        "https": TOR_SOCKS,
+    }
+
+
+def curl_with_optional_tor(base_cmd, use_tor):
+    """
+    Injects --socks5-hostname when Tor is enabled.
+    """
+    if not use_tor:
+        return base_cmd
+    return base_cmd[:1] + ["--socks5-hostname", "127.0.0.1:9050"] + base_cmd[1:]
+
+
 def extract_emails(html):
     return re.findall(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", html)
+
 
 def extract_inputs(html):
     return re.findall(r"<input[^>]*name=[\"']?([^\"'> ]+)", html, re.IGNORECASE)
 
+
 def extract_iframes(html):
     return re.findall(r"<iframe[^>]+(?:src|data-src)=['\"]?([^\"'>]+)", html, re.IGNORECASE)
+
 
 def extract_scripts(html, domain):
     scripts = re.findall(r"<script[^>]+src=['\"]?([^\"'>]+)", html, re.IGNORECASE)
     return [s for s in scripts if domain not in s]
+
 
 def extract_form_details(html, base_url):
     """
@@ -130,6 +156,7 @@ def extract_form_details(html, base_url):
 
     return forms
 
+
 def get_ssl_info(domain):
     try:
         ctx = ssl.create_default_context()
@@ -139,6 +166,7 @@ def get_ssl_info(domain):
             return s.getpeercert()
     except Exception as e:
         return f"[!] SSL Error: {e}"
+
 
 def decode_base64_target(text):
     matches = re.findall(r"target=([A-Za-z0-9+/=]+)", text)
@@ -150,6 +178,7 @@ def decode_base64_target(text):
         except Exception:
             continue
     return decoded_targets
+
 
 def run_subdomain_enum(domain, report_dir):
     sublist_out = os.path.join(report_dir, f"{domain}_subdomains.txt")
@@ -171,7 +200,8 @@ def run_subdomain_enum(domain, report_dir):
     vuln_subs = []
     for sub in subdomains:
         try:
-            r = requests.get(f"http://sub", timeout=10)
+            # BUGFIX: actually hit the subdomain, not literal "sub"
+            r = requests.get(f"http://{sub}", timeout=10)
             text = r.text.lower()
             if any(p.lower() in text for p in vuln_patterns):
                 vuln_subs.append(sub)
@@ -189,6 +219,7 @@ def run_subdomain_enum(domain, report_dir):
     print(f"[+] Saved vulnerable subdomains to {vuln_out}")
     print(f"[+] These can now be used for GraphQL scanning!")
 
+
 def run_deep_recon(target_url):
     if not target_url.startswith("http"):
         target_url = "https://" + target_url
@@ -203,15 +234,21 @@ def run_deep_recon(target_url):
         print(line)
         with open(report_path, "a") as report:
             report.write(line + "\n")
+
     choice = input("[?] Run subdomain enumeration? (y/n): ").strip().lower()
     if choice == 'y':
         run_subdomain_enum(base_domain, "reports")
+
+    #  Tor toggle for this deep recon run
+    use_tor = input("[?] Route HTTP through Tor (127.0.0.1:9050)? (y/n): ").strip().lower() == 'y'
+    proxies = build_proxies(use_tor)
 
     log(f"\nDeep Recon on: {target_url}\n")
 
     log("Redirects (via curl -L -I):")
     try:
-        result = subprocess.check_output(["curl", "-s", "-L", "-I", target_url], timeout=15).decode()
+        curl_cmd = curl_with_optional_tor(["curl", "-s", "-L", "-I", target_url], use_tor)
+        result = subprocess.check_output(curl_cmd, timeout=15).decode()
         for line in result.strip().split("\n"):
             if line.lower().startswith(("http", "location", "server", "status", "content-type")):
                 log(line.strip())
@@ -230,7 +267,12 @@ def run_deep_recon(target_url):
         log(f"Visiting: {current_url}")
 
         try:
-            response = requests.get(current_url, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
+            response = requests.get(
+                current_url,
+                timeout=15,
+                headers={'User-Agent': 'Mozilla/5.0'},
+                proxies=proxies
+            )
             html = response.text
             final_html = html
 
@@ -377,22 +419,38 @@ def run_deep_recon(target_url):
 
     log("\nForm Discovery (via curl grep):")
     try:
-        grep_out = subprocess.check_output(
-            f"curl -s {target_url} | grep -iE '(form|action|input)' || true",
-            shell=True, timeout=15
-        ).decode()
-        if grep_out.strip():
-            for line in grep_out.strip().split("\n"):
-                log(line.strip())
-        else:
+        grep_cmd = ["curl", "-s", target_url]
+        grep_cmd = curl_with_optional_tor(grep_cmd, use_tor)
+
+        grep_proc = subprocess.Popen(grep_cmd, stdout=subprocess.PIPE)
+        try:
+            grep_out = subprocess.check_output(
+                ["grep", "-iE", "(form|action|input)"],
+                stdin=grep_proc.stdout,
+                timeout=15
+            ).decode()
+            if grep_out.strip():
+                for line in grep_out.strip().split("\n"):
+                    log(line.strip())
+            else:
+                log("- No forms found")
+        except subprocess.CalledProcessError:
+            # grep exit code 1 = no matches
             log("- No forms found")
+        except Exception as e:
+            log(f"[!] Curl grep failed: {e}")
+        finally:
+            if grep_proc.stdout:
+                grep_proc.stdout.close()
+            grep_proc.wait()
     except Exception as e:
         log(f"[!] Curl grep failed: {e}")
 
     log("\nRaw HTML Copy (curl -o):")
     try:
         raw_path = f"reports/raw_{domain_for_ssl}_{timestamp}.html"
-        subprocess.run(["curl", "-s", target_url, "-o", raw_path], timeout=15)
+        curl_cmd = curl_with_optional_tor(["curl", "-s", target_url, "-o", raw_path], use_tor)
+        subprocess.run(curl_cmd, timeout=15)
         log(f"Saved raw HTML to {raw_path}")
     except Exception as e:
         log(f"[!] Raw HTML save failed: {e}")
@@ -403,7 +461,7 @@ def run_deep_recon(target_url):
         try:
             headers = {"x-apikey": VT_API_KEY}
             vt_url = f"https://www.virustotal.com/api/v3/domains/{domain_for_ssl}"
-            vt_response = requests.get(vt_url, headers=headers, timeout=15)
+            vt_response = requests.get(vt_url, headers=headers, timeout=15, proxies=proxies)
             if vt_response.status_code == 200:
                 vt_data = vt_response.json()
                 stats = vt_data.get("data", {}).get("attributes", {}).get("last_analysis_stats", {})
@@ -441,7 +499,7 @@ def run_deep_recon(target_url):
         try:
             headers = {"x-apikey": VT_API_KEY}
             ip_url = f"https://www.virustotal.com/api/v3/ip_addresses/{ip}"
-            ip_response = requests.get(ip_url, headers=headers, timeout=15)
+            ip_response = requests.get(ip_url, headers=headers, timeout=15, proxies=proxies)
             if ip_response.status_code == 200:
                 ip_data = ip_response.json()
                 stats = ip_data.get("data", {}).get("attributes", {}).get("last_analysis_stats", {})
@@ -492,6 +550,7 @@ def run_deep_recon(target_url):
         log(f"[!] DIRB scan failed: {e}")
 
     log("\nDeep Recon Complete.\n")
+
 
 if __name__ == "__main__":
     import sys
