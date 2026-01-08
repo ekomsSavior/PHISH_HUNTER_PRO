@@ -2,7 +2,7 @@
 
 # PHISH\_HUNTER\_PRO
 
-Advanced phishing investigation and disruption toolkit written in Python.
+Advanced phishing investigation and disruption toolkit written in Python
 
 ![IMG\_4518](https://github.com/user-attachments/assets/7a5d70cd-b3cc-4bc3-94e7-f80d9fa8eeec)
 
